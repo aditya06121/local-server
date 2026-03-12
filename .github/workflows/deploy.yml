@@ -1,0 +1,54 @@
+name: Fullstack CI/CD
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---------- Setup Node ----------
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # ---------- Backend ----------
+      - name: Install backend dependencies
+        working-directory: server
+        run: npm install
+
+      - name: Run backend tests
+        working-directory: server
+        run: npm test
+
+  deploy:
+    needs: build-and-test
+    runs-on: self-hosted
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---------- Setup Node on Pi ----------
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Prepare directories
+        run: |
+          mkdir -p /home/pi/apps/fullstack-app/server
+
+      - name: Install backend production dependencies
+        working-directory: server
+        run: npm install --omit=dev
+
+      - name: Deploy backend
+        run: rsync -av --delete server/ /home/pi/apps/fullstack-app/server/
+
+      - name: Restart backend
+        run: sudo systemctl restart fullstack-app
