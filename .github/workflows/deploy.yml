@@ -51,4 +51,4 @@ jobs:
         run: rsync -av --delete server/ $HOME/apps/fullstack-app/server/
 
       - name: Restart backend
-        run: sudo systemctl restart fullstack-app
+        run: sudo systemctl restart fullstack-app || sudo systemctl start fullstack-app
