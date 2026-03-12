@@ -48,9 +48,4 @@ jobs:
 
       - name: Restart backend
         run: |
-          pkill -f "node index.js" || true
-          cd $HOME/apps/fullstack-app/server
-          nohup node index.js > server.log 2>&1 &
-          disown $!
-          sleep 2
-          kill -0 $! && echo "Server started successfully (PID: $!)" || echo "Server failed to start"
+          run: sudo systemctl restart library-app
