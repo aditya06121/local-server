@@ -11,13 +11,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ---------- Setup Node ----------
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 24
 
-      # ---------- Backend ----------
       - name: Install backend dependencies
         working-directory: server
         run: npm install
@@ -38,8 +36,7 @@ jobs:
           node-version: 24
 
       - name: Prepare directories
-        run: |
-          mkdir -p $HOME/apps/fullstack-app/server
+        run: mkdir -p $HOME/apps/fullstack-app/server
 
       - name: Install backend production dependencies
         working-directory: server
@@ -49,4 +46,6 @@ jobs:
         run: rsync -av --delete server/ $HOME/apps/fullstack-app/server/
 
       - name: Restart backend
-        run: pkill -f "node server.js" || true nohup node $HOME/apps/fullstack-app/server/server.js > server.log 2>&1 &
+        run: |
+          pkill -f "node index.js" || true
+          nohup node $HOME/apps/fullstack-app/server/index.js > $HOME/apps/fullstack-app/server/server.log 2>&1 &
