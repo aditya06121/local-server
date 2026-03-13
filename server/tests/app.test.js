@@ -7,7 +7,7 @@ describe("API routes", () => {
 
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({
-      message: "backend running on pi zero",
+      message: "backend is running!!!!",
     });
   });
 
