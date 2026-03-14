@@ -11,7 +11,6 @@ export default function DiceRoller() {
   const rollDice = async () => {
     try {
       setLoading(true);
-
       const res = await fetch("/api/dice");
       const data: DiceResponse = await res.json();
 
