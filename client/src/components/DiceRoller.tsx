@@ -12,6 +12,7 @@ export default function DiceRoller() {
     try {
       setLoading(true);
       const res = await fetch("/api/dice");
+
       const data: DiceResponse = await res.json();
 
       setRoll(data.roll);
