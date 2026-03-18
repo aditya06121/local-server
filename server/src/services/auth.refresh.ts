@@ -1,4 +1,3 @@
-import { prisma } from "../db.js";
 import {
   compareRefreshToken,
   generateAccessToken,
@@ -6,6 +5,7 @@ import {
   hashRefreshToken,
   verifyRefreshToken,
 } from "../utils/auth.token.js";
+import { findSessionsByUserId, rotateSession } from "../db/queries.js";
 
 export type RefreshAccessTokenResult =
   | {
@@ -35,9 +35,7 @@ export async function refreshAccessToken(oldRefreshToken: string) {
   let sessions;
 
   try {
-    sessions = await prisma.session.findMany({
-      where: { userId: payload.userId },
-    });
+    sessions = await findSessionsByUserId(payload.userId);
   } catch {
     return {
       ok: false,
@@ -69,16 +67,11 @@ export async function refreshAccessToken(oldRefreshToken: string) {
   const hashed = await hashRefreshToken(newRefreshToken);
 
   try {
-    await prisma.$transaction([
-      prisma.session.delete({ where: { id: matchedSession.id } }),
-      prisma.session.create({
-        data: {
-          userId: payload.userId,
-          refreshToken: hashed,
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        },
-      }),
-    ]);
+    await rotateSession(matchedSession.id, {
+      userId: payload.userId,
+      refreshToken: hashed,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
   } catch {
     return {
       ok: false,

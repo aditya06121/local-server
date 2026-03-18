@@ -1,7 +1,14 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import app from "../../src/app.js";
-import dbConnect, { prisma } from "../../src/db.js";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { buildApp } from "../../src/app.js";
+import dbConnect, { closeDb } from "../../src/db.js";
+import {
+  deleteUsersByEmails,
+  findUserWithSessionsByEmail,
+} from "../../src/db/queries.js";
 import { compareRefreshToken } from "../../src/utils/auth.token.js";
+import type { FastifyInstance } from "fastify";
+
+let app: FastifyInstance;
 
 const createdEmails = new Set<string>();
 
@@ -36,24 +43,26 @@ async function cleanupUsers() {
     return;
   }
 
-  await prisma.user.deleteMany({
-    where: {
-      email: {
-        in: emails,
-      },
-    },
-  });
+  await deleteUsersByEmails(emails);
 }
 
 describe("POST /auth/login", () => {
   beforeAll(async () => {
     await dbConnect();
+  });
+
+  beforeEach(async () => {
+    app = buildApp();
     await app.ready();
+  });
+
+  afterEach(async () => {
+    await app.close();
   });
 
   afterAll(async () => {
     await cleanupUsers();
-    await prisma.$disconnect();
+    await closeDb();
   });
 
   it("should return 200, create a new session, and set auth cookies", async () => {
@@ -67,10 +76,7 @@ describe("POST /auth/login", () => {
 
     expect(registerRes.statusCode).toBe(201);
 
-    const existingUser = await prisma.user.findUnique({
-      where: { email: payload.email },
-      include: { sessions: true },
-    });
+    const existingUser = await findUserWithSessionsByEmail(payload.email);
 
     expect(existingUser).not.toBeNull();
     expect(existingUser?.sessions).toHaveLength(1);
@@ -120,10 +126,7 @@ describe("POST /auth/login", () => {
     expect(accessTokenCookie?.value).toEqual(expect.any(String));
     expect(refreshTokenCookie?.value).toEqual(expect.any(String));
 
-    const userAfterLogin = await prisma.user.findUnique({
-      where: { email: payload.email },
-      include: { sessions: true },
-    });
+    const userAfterLogin = await findUserWithSessionsByEmail(payload.email);
 
     expect(userAfterLogin?.sessions).toHaveLength(2);
     const refreshTokenMatches = await Promise.all(

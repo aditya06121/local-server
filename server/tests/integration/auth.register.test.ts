@@ -1,8 +1,15 @@
 import bcrypt from "bcrypt";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import app from "../../src/app.js";
-import dbConnect, { prisma } from "../../src/db.js";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { buildApp } from "../../src/app.js";
+import dbConnect, { closeDb } from "../../src/db.js";
+import {
+  deleteUsersByEmails,
+  findUserWithSessionsByEmail,
+} from "../../src/db/queries.js";
 import { compareRefreshToken } from "../../src/utils/auth.token.js";
+import type { FastifyInstance } from "fastify";
+
+let app: FastifyInstance;
 
 const createdEmails = new Set<string>();
 
@@ -37,24 +44,26 @@ async function cleanupUsers() {
     return;
   }
 
-  await prisma.user.deleteMany({
-    where: {
-      email: {
-        in: emails,
-      },
-    },
-  });
+  await deleteUsersByEmails(emails);
 }
 
 describe("POST /auth/register", () => {
   beforeAll(async () => {
     await dbConnect();
+  });
+
+  beforeEach(async () => {
+    app = buildApp();
     await app.ready();
+  });
+
+  afterEach(async () => {
+    await app.close();
   });
 
   afterAll(async () => {
     await cleanupUsers();
-    await prisma.$disconnect();
+    await closeDb();
   });
 
   it("should return 201, persist the user, hash password, and set auth cookies", async () => {
@@ -104,10 +113,7 @@ describe("POST /auth/register", () => {
     expect(accessTokenCookie?.value).toEqual(expect.any(String));
     expect(refreshTokenCookie?.value).toEqual(expect.any(String));
 
-    const user = await prisma.user.findUnique({
-      where: { email: payload.email },
-      include: { sessions: true },
-    });
+    const user = await findUserWithSessionsByEmail(payload.email);
 
     expect(user).not.toBeNull();
     expect(user?.id).toBe(body.data.user.id);

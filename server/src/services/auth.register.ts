@@ -1,11 +1,10 @@
-import { prisma } from "../db.js";
 import bcrypt from "bcrypt";
 import {
   generateAccessToken,
   generateRefreshToken,
   hashRefreshToken,
 } from "../utils/auth.token.js";
-import { Prisma } from "@prisma/client";
+import { createSession, createUser, isUniqueViolation } from "../db/queries.js";
 
 type RegisterInput = {
   name: string;
@@ -36,24 +35,14 @@ export async function registerUser(input: RegisterInput) {
 
   let user: { id: string; email: string };
 
-  // Create user (atomic, concurrency-safe)
   try {
-    user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-      },
-      select: {
-        id: true,
-        email: true,
-      },
+    user = await createUser({
+      name,
+      email,
+      password: hashedPassword,
     });
   } catch (e) {
-    if (
-      e instanceof Prisma.PrismaClientKnownRequestError &&
-      e.code === "P2002"
-    ) {
+    if (isUniqueViolation(e)) {
       return {
         ok: false,
         code: "EMAIL_EXISTS",
@@ -70,18 +59,14 @@ export async function registerUser(input: RegisterInput) {
 
   const payload = { userId: user.id, email: user.email };
 
-  // Generate refresh token first
   const refreshToken = await generateRefreshToken(payload);
   const hashedRefreshToken = await hashRefreshToken(refreshToken);
 
-  // Store session
   try {
-    await prisma.session.create({
-      data: {
-        userId: user.id,
-        refreshToken: hashedRefreshToken,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-      },
+    await createSession({
+      userId: user.id,
+      refreshToken: hashedRefreshToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
   } catch {
     return {
@@ -91,7 +76,6 @@ export async function registerUser(input: RegisterInput) {
     } satisfies RegisterUserResult;
   }
 
-  // Generate access token after session is persisted
   const accessToken = await generateAccessToken(payload);
 
   return {

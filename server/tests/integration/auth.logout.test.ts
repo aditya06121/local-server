@@ -1,6 +1,13 @@
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import app from "../../src/app.js";
-import dbConnect, { prisma } from "../../src/db.js";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { buildApp } from "../../src/app.js";
+import dbConnect, { closeDb } from "../../src/db.js";
+import {
+  deleteUsersByEmails,
+  findUserWithSessionsByEmail,
+} from "../../src/db/queries.js";
+import type { FastifyInstance } from "fastify";
+
+let app: FastifyInstance;
 
 const createdEmails = new Set<string>();
 
@@ -35,24 +42,26 @@ async function cleanupUsers() {
     return;
   }
 
-  await prisma.user.deleteMany({
-    where: {
-      email: {
-        in: emails,
-      },
-    },
-  });
+  await deleteUsersByEmails(emails);
 }
 
 describe("POST /auth/logout", () => {
   beforeAll(async () => {
     await dbConnect();
+  });
+
+  beforeEach(async () => {
+    app = buildApp();
     await app.ready();
+  });
+
+  afterEach(async () => {
+    await app.close();
   });
 
   afterAll(async () => {
     await cleanupUsers();
-    await prisma.$disconnect();
+    await closeDb();
   });
 
   it("should return 200, remove the session, and clear auth cookies", async () => {
@@ -69,10 +78,7 @@ describe("POST /auth/logout", () => {
     const refreshTokenCookie = getCookie(registerRes.cookies, "refreshToken");
     expect(refreshTokenCookie?.value).toEqual(expect.any(String));
 
-    const userBeforeLogout = await prisma.user.findUnique({
-      where: { email: payload.email },
-      include: { sessions: true },
-    });
+    const userBeforeLogout = await findUserWithSessionsByEmail(payload.email);
 
     expect(userBeforeLogout?.sessions).toHaveLength(1);
 
@@ -106,10 +112,7 @@ describe("POST /auth/logout", () => {
       }),
     );
 
-    const userAfterLogout = await prisma.user.findUnique({
-      where: { email: payload.email },
-      include: { sessions: true },
-    });
+    const userAfterLogout = await findUserWithSessionsByEmail(payload.email);
 
     expect(userAfterLogout?.sessions).toHaveLength(0);
 

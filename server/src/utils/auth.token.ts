@@ -1,13 +1,20 @@
+import "dotenv/config";
 import jwt from "jsonwebtoken";
 import { createHash, randomUUID } from "crypto";
 import bcrypt from "bcrypt";
 
-// ---- constants ----
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET!;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!;
-
 const ACCESS_TOKEN_EXPIRY = "15m";
 const REFRESH_TOKEN_EXPIRY = "7d";
+
+function getRequiredEnv(name: "ACCESS_TOKEN_SECRET" | "REFRESH_TOKEN_SECRET") {
+  const value = process.env[name];
+
+  if (!value) {
+    throw new Error(`${name} is not set`);
+  }
+
+  return value;
+}
 
 // ---- payload type ----
 export type TokenPayload = {
@@ -17,13 +24,13 @@ export type TokenPayload = {
 
 // ---- generators ----
 export function generateAccessToken(payload: TokenPayload) {
-  return jwt.sign(payload, ACCESS_TOKEN_SECRET, {
+  return jwt.sign(payload, getRequiredEnv("ACCESS_TOKEN_SECRET"), {
     expiresIn: ACCESS_TOKEN_EXPIRY,
   });
 }
 
 export function generateRefreshToken(payload: TokenPayload) {
-  return jwt.sign(payload, REFRESH_TOKEN_SECRET, {
+  return jwt.sign(payload, getRequiredEnv("REFRESH_TOKEN_SECRET"), {
     expiresIn: REFRESH_TOKEN_EXPIRY,
     jwtid: randomUUID(),
   });
@@ -43,7 +50,7 @@ export async function compareRefreshToken(token: string, hashedToken: string) {
 
 // ---- verifiers ----
 export function verifyAccessToken(token: string): TokenPayload {
-  const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+  const decoded = jwt.verify(token, getRequiredEnv("ACCESS_TOKEN_SECRET"));
 
   if (
     typeof decoded !== "object" ||
@@ -61,7 +68,7 @@ export function verifyAccessToken(token: string): TokenPayload {
 }
 
 export function verifyRefreshToken(token: string): TokenPayload {
-  const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET);
+  const decoded = jwt.verify(token, getRequiredEnv("REFRESH_TOKEN_SECRET"));
 
   if (
     typeof decoded !== "object" ||

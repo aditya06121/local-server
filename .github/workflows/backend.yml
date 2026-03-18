@@ -10,6 +10,7 @@ jobs:
   deploy-backend:
     runs-on: self-hosted
     timeout-minutes: 15
+    environment: secrets
 
     defaults:
       run:
@@ -38,6 +39,13 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Setup env
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
+          echo "DIRECT_URL=${{ secrets.DIRECT_URL }}" >> .env
+          echo "ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}" >> .env
+          echo "REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}" >> .env
 
       - name: Run tests
         run: npm test

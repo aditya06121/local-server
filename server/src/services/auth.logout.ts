@@ -1,5 +1,5 @@
-import { prisma } from "../db.js";
 import { compareRefreshToken, verifyRefreshToken } from "../utils/auth.token.js";
+import { deleteSessionById, findSessionsByUserId } from "../db/queries.js";
 
 export type LogoutUserResult =
   | {
@@ -27,9 +27,7 @@ export async function logoutUser(refreshToken: string) {
   let sessions;
 
   try {
-    sessions = await prisma.session.findMany({
-      where: { userId: payload.userId },
-    });
+    sessions = await findSessionsByUserId(payload.userId);
   } catch {
     return {
       ok: false,
@@ -57,9 +55,7 @@ export async function logoutUser(refreshToken: string) {
   }
 
   try {
-    await prisma.session.delete({
-      where: { id: matchedSession.id },
-    });
+    await deleteSessionById(matchedSession.id);
   } catch {
     return {
       ok: false,
