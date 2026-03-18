@@ -1,28 +1,41 @@
-name: Dev CI
+name: Backend CI/CD
 
 on:
   push:
-    branches: [dev]
+    branches: [main]
+    paths:
+      - "server/**"
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
+  deploy-backend:
+    runs-on: self-hosted
+    timeout-minutes: 15
     environment: secrets
 
     defaults:
       run:
         working-directory: server
 
+    env:
+      NODE_OPTIONS: "--max-old-space-size=256"
+
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: "npm"
+          cache: npm
           cache-dependency-path: server/package-lock.json
+
+      - name: Configure npm for low memory (Pi friendly)
+        run: |
+          npm config set maxsockets 1
+          npm config set audit false
+          npm config set fund false
+          npm config set progress false
 
       - name: Install dependencies
         run: npm ci
@@ -38,4 +51,16 @@ jobs:
         run: npx prisma generate
 
       - name: Run tests
-        run: npm run test
+        run: npm test
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Remove dev dependencies
+        run: npm prune --omit=dev
+
+      - name: Deploy backend
+        run: rsync -av --delete ${{ github.workspace }}/server/ $HOME/apps/fullstack-app/server/
+
+      - name: Restart backend service
+        run: sudo systemctl restart app
