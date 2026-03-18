@@ -22,6 +22,9 @@ const authFailureSchema = createApiFailureSchema();
 const authDbFailureResponses = {
   500: authFailureSchema,
 };
+const authRateLimitResponses = {
+  429: authFailureSchema,
+};
 const emptySuccessDataSchema = {
   type: "object",
   additionalProperties: false,
@@ -55,6 +58,7 @@ export const registerSchema = {
   response: {
     201: createApiSuccessSchema(registerSuccessDataSchema),
     409: authFailureSchema,
+    ...authRateLimitResponses,
     ...authDbFailureResponses,
   },
 };
@@ -71,6 +75,7 @@ export const loginSchema = {
   response: {
     200: createApiSuccessSchema(registerSuccessDataSchema),
     401: authFailureSchema,
+    ...authRateLimitResponses,
     ...authDbFailureResponses,
   },
 };
@@ -79,6 +84,7 @@ export const refreshSchema = {
   response: {
     200: createApiSuccessSchema(emptySuccessDataSchema),
     401: authFailureSchema,
+    ...authRateLimitResponses,
     ...authDbFailureResponses,
   },
 };
@@ -86,6 +92,7 @@ export const refreshSchema = {
 export const logoutSchema = {
   response: {
     200: createApiSuccessSchema(emptySuccessDataSchema),
+    ...authRateLimitResponses,
     ...authDbFailureResponses,
   },
 };

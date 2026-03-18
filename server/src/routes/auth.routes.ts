@@ -13,16 +13,52 @@ import {
 } from "../schema/auth.schema.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 
+const registerRateLimit = {
+  max: 10,
+  timeWindow: "1 minute",
+};
+
+const loginRateLimit = {
+  max: 10,
+  timeWindow: "1 minute",
+};
+
+const refreshRateLimit = {
+  max: 20,
+  timeWindow: "1 minute",
+};
+
+const logoutRateLimit = {
+  max: 20,
+  timeWindow: "1 minute",
+};
+
 export default async function authRoutes(app: FastifyInstance) {
   // public routes
-  app.post("/register", { schema: registerSchema }, registerHandler);
-  app.post("/login", { schema: loginSchema }, loginHandler);
+  app.post(
+    "/register",
+    { schema: registerSchema, config: { rateLimit: registerRateLimit } },
+    registerHandler,
+  );
+  app.post(
+    "/login",
+    { schema: loginSchema, config: { rateLimit: loginRateLimit } },
+    loginHandler,
+  );
 
   // refresh token
-  app.post("/refresh-token", { schema: refreshSchema }, refreshHandler);
+  app.post(
+    "/refresh-token",
+    { schema: refreshSchema, config: { rateLimit: refreshRateLimit } },
+    refreshHandler,
+  );
 
   // logout
-  app.post("/logout", { schema: logoutSchema }, logoutHandler);
+  app.post(
+    "/logout",
+    { schema: logoutSchema, config: { rateLimit: logoutRateLimit } },
+    logoutHandler,
+  );
 
   // example protected route
   app.get("/me", { preHandler: authMiddleware, schema: meSchema }, async (req) => {

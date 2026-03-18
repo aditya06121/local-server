@@ -41,12 +41,19 @@ describe("auth schema failure responses", () => {
   it("should expose refresh responses for success, unauthorized, and DB failures", () => {
     expect(refreshSchema.response).toHaveProperty("200");
     expect(refreshSchema.response).toHaveProperty("401");
+    expect(refreshSchema.response).toHaveProperty("429");
     expect(refreshSchema.response).toHaveProperty("500");
   });
 
   it("should expose logout responses for success and DB failures", () => {
     expect(logoutSchema.response).toHaveProperty("200");
+    expect(logoutSchema.response).toHaveProperty("429");
     expect(logoutSchema.response).toHaveProperty("500");
+  });
+
+  it("should expose register and login rate-limit responses", () => {
+    expect(registerSchema.response).toHaveProperty("429");
+    expect(loginSchema.response).toHaveProperty("429");
   });
 
   it("should expose protected user responses for success and unauthorized", () => {
