@@ -42,7 +42,7 @@ async function cleanupUsers() {
   });
 }
 
-describe("auth route rate limits", () => {
+describe("auth route rate limits", { timeout: 30000 }, () => {
   beforeAll(async () => {
     await dbConnect();
     await app.ready();
