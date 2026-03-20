@@ -7,30 +7,59 @@ on:
       - "client/**"
 
 jobs:
-  deploy-frontend:
-    runs-on: self-hosted
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: secrets
+
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
+          cache: npm
+          cache-dependency-path: client/package-lock.json
 
-      - name: Prepare directories
-        run: mkdir -p $HOME/apps/fullstack-app/client
-
-      - name: Install frontend dependencies
+      - name: Install dependencies
         working-directory: client
-        run: npm install
+        run: npm ci
 
       - name: Build frontend
         working-directory: client
         run: npm run build
 
-      - name: Deploy frontend
-        run: rsync -av --delete client/dist/ $HOME/apps/fullstack-app/client/
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Reload nginx
-        run: sudo systemctl reload nginx
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./client
+          platforms: linux/arm64
+          push: true
+          tags: ghcr.io/aditya06121/local-server/frontend:latest
+
+      - name: Connect Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-client-secret: ${{ secrets.TS_OAUTH_SECRET }}
+
+      - name: Deploy to Pi
+        run: |
+          ssh -o StrictHostKeyChecking=no aditya@${{ secrets.PI_TAILSCALE_IP }} '
+            cd /home/aditya/app &&
+            git pull &&
+            docker compose pull frontend &&
+            docker compose up -d frontend
+          '

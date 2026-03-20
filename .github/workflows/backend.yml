@@ -7,20 +7,17 @@ on:
       - "server/**"
 
 jobs:
-  deploy-backend:
-    runs-on: self-hosted
+  build-and-deploy:
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: secrets
 
-    defaults:
-      run:
-        working-directory: server
-
-    env:
-      NODE_OPTIONS: "--max-old-space-size=256"
+    permissions:
+      contents: read
+      packages: write
 
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node
@@ -30,34 +27,48 @@ jobs:
           cache: npm
           cache-dependency-path: server/package-lock.json
 
-      - name: Configure npm for low memory (Pi friendly)
-        run: |
-          npm config set maxsockets 1
-          npm config set audit false
-          npm config set fund false
-          npm config set progress false
-
       - name: Install dependencies
+        working-directory: server
         run: npm ci
 
-      - name: Setup env
-        run: |
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .env
-          echo "DIRECT_URL=${{ secrets.DIRECT_URL }}" >> .env
-          echo "ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}" >> .env
-          echo "REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}" >> .env
-
       - name: Run tests
+        working-directory: server
         run: npm test
 
       - name: Build TypeScript
+        working-directory: server
         run: npm run build
 
-      - name: Remove dev dependencies
-        run: npm prune --omit=dev
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Deploy backend
-        run: rsync -av --delete ${{ github.workspace }}/server/ $HOME/apps/fullstack-app/server/
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server
+          platforms: linux/arm64
+          push: true
+          tags: ghcr.io/aditya06121/local-server/backend:latest
 
-      - name: Restart backend service
-        run: sudo systemctl restart app
+      - name: Connect Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-client-secret: ${{ secrets.TS_OAUTH_SECRET }}
+
+      - name: Deploy to Pi
+        run: |
+          ssh -o StrictHostKeyChecking=no aditya@${{ secrets.PI_TAILSCALE_IP }} '
+            cd /home/aditya/app &&
+            git pull &&
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env &&
+            echo "DIRECT_URL=${{ secrets.DIRECT_URL }}" >> .env &&
+            echo "ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}" >> .env &&
+            echo "REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}" >> .env &&
+            docker compose pull backend &&
+            docker compose up -d backend
+          '

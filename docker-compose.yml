@@ -1,0 +1,32 @@
+services:
+  backend:
+    image: ghcr.io/aditya06121/local-server/backend:latest
+    container_name: backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - app-network
+
+  frontend:
+    image: ghcr.io/aditya06121/local-server/frontend:latest
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --url http://frontend:80 --no-autoupdate
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
