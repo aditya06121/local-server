@@ -31,6 +31,14 @@ jobs:
         working-directory: server
         run: npm ci
 
+      - name: Setup env
+        working-directory: server
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+          echo "DIRECT_URL=${{ secrets.DIRECT_URL }}" >> .env
+          echo "ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}" >> .env
+          echo "REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}" >> .env
+
       - name: Run tests
         working-directory: server
         run: npm test
@@ -54,11 +62,12 @@ jobs:
           push: true
           tags: ghcr.io/aditya06121/local-server/backend:latest
 
-      - name: Connect Tailscale
-        uses: tailscale/github-action@v2
+      - name: Tailscale
+        uses: tailscale/github-action@v4
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
 
       - name: Deploy to Pi
         run: |

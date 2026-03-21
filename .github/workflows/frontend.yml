@@ -49,8 +49,8 @@ jobs:
           push: true
           tags: ghcr.io/aditya06121/local-server/frontend:latest
 
-      - name: Connect Tailscale
-        uses: tailscale/github-action@v2
+      - name: Tailscale
+        uses: tailscale/github-action@v4
         with:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
