@@ -58,9 +58,15 @@ jobs:
 
       - name: Deploy to Pi
         run: |
+          eval $(ssh-agent -s)
+          echo "${{ secrets.PI_SSH_KEY }}" | ssh-add -
           ssh -o StrictHostKeyChecking=no aditya@${{ secrets.PI_TAILSCALE_IP }} '
             cd /home/aditya/app &&
             git pull &&
-            docker compose pull frontend &&
-            docker compose up -d frontend
+            echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env &&
+            echo "DIRECT_URL=${{ secrets.DIRECT_URL }}" >> .env &&
+            echo "ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}" >> .env &&
+            echo "REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}" >> .env &&
+            docker compose pull backend &&
+            docker compose up -d backend
           '
