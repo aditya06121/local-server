@@ -6,14 +6,15 @@ import rateLimit from "@fastify/rate-limit";
 import { failure } from "./utils/response.js";
 
 export function buildApp(): FastifyInstance {
-  const app = Fastify();
+  const app = Fastify({
+    trustProxy: true,
+  });
 
   app.register(cookie);
   app.register(rateLimit, {
     global: false,
     hook: "preHandler",
   });
-
   app.setErrorHandler((error, _req, reply) => {
     if (
       typeof error === "object" &&

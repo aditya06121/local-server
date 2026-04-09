@@ -1,7 +1,6 @@
 import app from "./app.js";
 import "dotenv/config";
 import dbConnect from "./db.js";
-import { loadModules } from "./loadModules.js";
 
 const start = async () => {
   try {
