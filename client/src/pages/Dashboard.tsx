@@ -501,10 +501,35 @@ export default function Dashboard() {
                             bgcolor: "background.paper",
                           }}
                         >
-                          <Typography variant="subtitle2" fontWeight={700}>
+                          <Typography
+                            component={RouterLink}
+                            to={`/profiles/${request.fromUser.id}`}
+                            variant="subtitle2"
+                            fontWeight={700}
+                            sx={{
+                              color: "text.primary",
+                              textDecoration: "none",
+                              "&:hover": {
+                                textDecoration: "underline",
+                              },
+                            }}
+                          >
                             {request.fromUser.name}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
+                          <Typography
+                            component={RouterLink}
+                            to={`/profiles/${request.fromUser.id}`}
+                            variant="body2"
+                            color="text.secondary"
+                            sx={{
+                              display: "inline-block",
+                              mt: 0.4,
+                              textDecoration: "none",
+                              "&:hover": {
+                                textDecoration: "underline",
+                              },
+                            }}
+                          >
                             {request.fromUser.email}
                           </Typography>
 
