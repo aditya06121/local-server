@@ -4,7 +4,7 @@ import dbConnect, { closeDb } from "../../src/db.js";
 import {
   deleteUsersByEmails,
   findUserWithSessionsByEmail,
-} from "../../src/db/queries.js";
+} from "../../src/db/user.query.js";
 import type { FastifyInstance } from "fastify";
 
 let app: FastifyInstance;

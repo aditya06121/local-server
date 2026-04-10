@@ -5,7 +5,7 @@ import dbConnect, { closeDb } from "../../src/db.js";
 import {
   deleteUsersByEmails,
   findUserWithSessionsByEmail,
-} from "../../src/db/queries.js";
+} from "../../src/db/user.query.js";
 import { compareRefreshToken } from "../../src/utils/auth.token.js";
 import type { FastifyInstance } from "fastify";
 
@@ -151,6 +151,46 @@ describe("POST /auth/register", () => {
     expect(second.json()).toMatchObject({
       success: false,
       message: "Request failed",
+      error: {
+        code: "EMAIL_EXISTS",
+      },
+    });
+  });
+
+  it("should normalize email to lowercase and reject case-insensitive duplicates", async () => {
+    const payload = buildPayload();
+    const uppercaseEmail = payload.email.toUpperCase();
+
+    const first = await app.inject({
+      method: "POST",
+      url: "/auth/register",
+      payload: {
+        ...payload,
+        email: uppercaseEmail,
+      },
+    });
+
+    expect(first.statusCode).toBe(201);
+    expect(first.json()).toMatchObject({
+      data: {
+        user: {
+          email: payload.email,
+        },
+      },
+    });
+
+    const storedUser = await findUserWithSessionsByEmail(payload.email);
+
+    expect(storedUser?.email).toBe(payload.email);
+
+    const second = await app.inject({
+      method: "POST",
+      url: "/auth/register",
+      payload,
+    });
+
+    expect(second.statusCode).toBe(409);
+    expect(second.json()).toMatchObject({
       error: {
         code: "EMAIL_EXISTS",
       },

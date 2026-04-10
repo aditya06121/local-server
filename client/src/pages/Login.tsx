@@ -32,7 +32,8 @@ export default function Login() {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isLoading, setAuthenticatedUser } = useAuth();
+  const { isAuthenticated, isLoading, refreshUser, setAuthenticatedUser } =
+    useAuth();
   const redirectTarget =
     (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ??
     "/";
@@ -54,8 +55,12 @@ export default function Login() {
         password,
       });
 
-      const user = toAuthUser(res.data.data.user);
-      setAuthenticatedUser(user);
+      const currentUser = await refreshUser();
+
+      if (!currentUser) {
+        setAuthenticatedUser(toAuthUser(res.data.data.user));
+      }
+
       navigate(redirectTarget, { replace: true });
     } catch (err) {
       const error = err as AxiosError<AuthFailureResponse>;

@@ -1,7 +1,7 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { buildApp } from "../../src/app.js";
 import dbConnect, { closeDb } from "../../src/db.js";
-import { deleteUsersByEmails } from "../../src/db/queries.js";
+import { deleteUsersByEmails } from "../../src/db/user.query.js";
 import type { FastifyInstance } from "fastify";
 
 let app: FastifyInstance;

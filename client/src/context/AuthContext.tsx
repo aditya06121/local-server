@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import {
   createContext,
   useContext,
@@ -16,6 +17,7 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isLoading: boolean;
   setAuthenticatedUser: (user: AuthUser) => void;
+  refreshUser: () => Promise<AuthUser | null>;
   logout: () => Promise<void>;
 };
 
@@ -48,6 +50,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(nextUser);
   }
 
+  async function refreshUser() {
+    const currentUser = await getCurrentUser();
+
+    setUser(currentUser);
+
+    return currentUser;
+  }
+
   async function logout() {
     try {
       await logoutRequest();
@@ -63,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isLoading,
         setAuthenticatedUser,
+        refreshUser,
         logout,
       }}
     >

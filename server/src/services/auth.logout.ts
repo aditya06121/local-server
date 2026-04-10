@@ -1,5 +1,8 @@
-import { compareRefreshToken, verifyRefreshToken } from "../utils/auth.token.js";
-import { deleteSessionById, findSessionsByUserId } from "../db/queries.js";
+import {
+  compareRefreshToken,
+  verifyRefreshToken,
+} from "../utils/auth.token.js";
+import { deleteSessionById, findSessionByTokenId } from "../db/user.query.js";
 
 export type LogoutUserResult =
   | {
@@ -24,10 +27,10 @@ export async function logoutUser(refreshToken: string) {
     } satisfies LogoutUserResult;
   }
 
-  let sessions;
+  let session;
 
   try {
-    sessions = await findSessionsByUserId(payload.userId);
+    session = await findSessionByTokenId(payload.tokenId);
   } catch {
     return {
       ok: false,
@@ -36,17 +39,17 @@ export async function logoutUser(refreshToken: string) {
     } satisfies LogoutUserResult;
   }
 
-  let matchedSession = null;
-
-  for (const session of sessions) {
-    const isMatch = await compareRefreshToken(refreshToken, session.refreshToken);
-    if (isMatch) {
-      matchedSession = session;
-      break;
-    }
+  if (!session || session.userId !== payload.userId) {
+    return {
+      ok: false,
+      code: "INVALID_TOKEN",
+      details: "Invalid token",
+    } satisfies LogoutUserResult;
   }
 
-  if (!matchedSession) {
+  const isMatch = await compareRefreshToken(refreshToken, session.refreshToken);
+
+  if (!isMatch) {
     return {
       ok: false,
       code: "INVALID_TOKEN",
@@ -55,7 +58,7 @@ export async function logoutUser(refreshToken: string) {
   }
 
   try {
-    await deleteSessionById(matchedSession.id);
+    await deleteSessionById(session.id);
   } catch {
     return {
       ok: false,

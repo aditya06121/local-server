@@ -1,6 +1,6 @@
 import "dotenv/config";
 import jwt from "jsonwebtoken";
-import { createHash, randomUUID } from "crypto";
+import { createHash } from "crypto";
 import bcrypt from "bcrypt";
 
 const ACCESS_TOKEN_EXPIRY = "15m";
@@ -22,6 +22,10 @@ export type TokenPayload = {
   email: string;
 };
 
+export type RefreshTokenPayload = TokenPayload & {
+  tokenId: string;
+};
+
 // ---- generators ----
 export function generateAccessToken(payload: TokenPayload) {
   return jwt.sign(payload, getRequiredEnv("ACCESS_TOKEN_SECRET"), {
@@ -29,10 +33,10 @@ export function generateAccessToken(payload: TokenPayload) {
   });
 }
 
-export function generateRefreshToken(payload: TokenPayload) {
+export function generateRefreshToken(payload: TokenPayload, tokenId: string) {
   return jwt.sign(payload, getRequiredEnv("REFRESH_TOKEN_SECRET"), {
     expiresIn: REFRESH_TOKEN_EXPIRY,
-    jwtid: randomUUID(),
+    jwtid: tokenId,
   });
 }
 
@@ -67,14 +71,15 @@ export function verifyAccessToken(token: string): TokenPayload {
   };
 }
 
-export function verifyRefreshToken(token: string): TokenPayload {
+export function verifyRefreshToken(token: string): RefreshTokenPayload {
   const decoded = jwt.verify(token, getRequiredEnv("REFRESH_TOKEN_SECRET"));
 
   if (
     typeof decoded !== "object" ||
     decoded === null ||
     !("userId" in decoded) ||
-    !("email" in decoded)
+    !("email" in decoded) ||
+    !("jti" in decoded)
   ) {
     throw new Error("Invalid refresh token payload");
   }
@@ -82,5 +87,6 @@ export function verifyRefreshToken(token: string): TokenPayload {
   return {
     userId: decoded.userId as string,
     email: decoded.email as string,
+    tokenId: decoded.jti as string,
   };
 }

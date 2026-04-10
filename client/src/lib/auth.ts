@@ -6,12 +6,20 @@ type BackendAuthUser = {
   id?: string;
   userId?: string;
   email: string;
+  name?: string;
+  phone?: string | null;
+  bio?: string | null;
+  location?: string | null;
 };
 
 export type AuthUser = {
   id: string;
   email: string;
+  name: string;
   displayName: string;
+  phone: string | null;
+  bio: string | null;
+  location: string | null;
 };
 
 function toDisplayName(email: string, preferredName?: string) {
@@ -50,16 +58,23 @@ export function toAuthUser(
   user: BackendAuthUser,
   preferredName?: string,
 ): AuthUser {
+  const resolvedName = preferredName?.trim() || user.name?.trim();
+  const displayName = toDisplayName(user.email, resolvedName);
+
   return {
     id: user.id ?? user.userId ?? user.email,
     email: user.email,
-    displayName: toDisplayName(user.email, preferredName),
+    name: resolvedName || displayName,
+    displayName,
+    phone: user.phone ?? null,
+    bio: user.bio ?? null,
+    location: user.location ?? null,
   };
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
-    const res = await api.get<{ data?: { user?: BackendAuthUser } }>("/auth/me", {
+    const res = await api.get<{ data?: { user?: BackendAuthUser } }>("/users/me", {
       skipAuthRedirect: true,
     });
     const user = res.data.data?.user;

@@ -4,7 +4,7 @@ import dbConnect, { closeDb } from "../../src/db.js";
 import {
   deleteUsersByEmails,
   findUserWithSessionsByEmail,
-} from "../../src/db/queries.js";
+} from "../../src/db/user.query.js";
 import { compareRefreshToken } from "../../src/utils/auth.token.js";
 import type { FastifyInstance } from "fastify";
 
@@ -191,6 +191,38 @@ describe("POST /auth/login", () => {
       message: "Request failed",
       error: {
         code: "INVALID_CREDENTIALS",
+      },
+    });
+  });
+
+  it("should authenticate with a differently cased email", async () => {
+    const payload = buildRegisterPayload();
+
+    const registerRes = await app.inject({
+      method: "POST",
+      url: "/auth/register",
+      payload,
+    });
+
+    expect(registerRes.statusCode).toBe(201);
+
+    const loginRes = await app.inject({
+      method: "POST",
+      url: "/auth/login",
+      payload: {
+        email: payload.email.toUpperCase(),
+        password: payload.password,
+      },
+    });
+
+    expect(loginRes.statusCode).toBe(200);
+    expect(loginRes.json()).toMatchObject({
+      success: true,
+      message: "LOGGED_IN",
+      data: {
+        user: {
+          email: payload.email,
+        },
       },
     });
   });

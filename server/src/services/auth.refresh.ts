@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import {
   compareRefreshToken,
   generateAccessToken,
@@ -5,7 +6,7 @@ import {
   hashRefreshToken,
   verifyRefreshToken,
 } from "../utils/auth.token.js";
-import { findSessionsByUserId, rotateSession } from "../db/queries.js";
+import { findSessionByTokenId, rotateSession } from "../db/user.query.js";
 
 export type RefreshAccessTokenResult =
   | {
@@ -32,10 +33,10 @@ export async function refreshAccessToken(oldRefreshToken: string) {
     } satisfies RefreshAccessTokenResult;
   }
 
-  let sessions;
+  let session;
 
   try {
-    sessions = await findSessionsByUserId(payload.userId);
+    session = await findSessionByTokenId(payload.tokenId);
   } catch {
     return {
       ok: false,
@@ -44,17 +45,7 @@ export async function refreshAccessToken(oldRefreshToken: string) {
     } satisfies RefreshAccessTokenResult;
   }
 
-  let matchedSession = null;
-
-  for (const session of sessions) {
-    const isMatch = await compareRefreshToken(oldRefreshToken, session.refreshToken);
-    if (isMatch) {
-      matchedSession = session;
-      break;
-    }
-  }
-
-  if (!matchedSession) {
+  if (!session || session.userId !== payload.userId) {
     return {
       ok: false,
       code: "INVALID_TOKEN",
@@ -62,13 +53,27 @@ export async function refreshAccessToken(oldRefreshToken: string) {
     } satisfies RefreshAccessTokenResult;
   }
 
-  // rotate refresh token
-  const newRefreshToken = generateRefreshToken(payload);
+  const isMatch = await compareRefreshToken(oldRefreshToken, session.refreshToken);
+
+  if (!isMatch) {
+    return {
+      ok: false,
+      code: "INVALID_TOKEN",
+      details: "Invalid token",
+    } satisfies RefreshAccessTokenResult;
+  }
+
+  const nextTokenId = randomUUID();
+  const newRefreshToken = generateRefreshToken(
+    { userId: payload.userId, email: payload.email },
+    nextTokenId,
+  );
   const hashed = await hashRefreshToken(newRefreshToken);
 
   try {
-    await rotateSession(matchedSession.id, {
+    await rotateSession(session.id, {
       userId: payload.userId,
+      tokenId: nextTokenId,
       refreshToken: hashed,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
@@ -80,7 +85,10 @@ export async function refreshAccessToken(oldRefreshToken: string) {
     } satisfies RefreshAccessTokenResult;
   }
 
-  const accessToken = generateAccessToken(payload);
+  const accessToken = generateAccessToken({
+    userId: payload.userId,
+    email: payload.email,
+  });
 
   return {
     ok: true,

@@ -32,7 +32,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const { isAuthenticated, isLoading, setAuthenticatedUser } = useAuth();
+  const { isAuthenticated, isLoading, refreshUser, setAuthenticatedUser } =
+    useAuth();
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -52,8 +53,12 @@ export default function Register() {
         password,
       });
 
-      const user = toAuthUser(res.data.data.user, name);
-      setAuthenticatedUser(user);
+      const currentUser = await refreshUser();
+
+      if (!currentUser) {
+        setAuthenticatedUser(toAuthUser(res.data.data.user, name));
+      }
+
       navigate("/", { replace: true });
     } catch (err) {
       const error = err as AxiosError<AuthFailureResponse>;

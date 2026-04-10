@@ -1,11 +1,12 @@
 import bcrypt from "bcrypt";
+import { randomUUID } from "crypto";
 import {
   generateAccessToken,
   generateRefreshToken,
   hashRefreshToken,
 } from "../utils/auth.token.js";
-import type { User } from "../db/schema.js";
-import { createSession, findUserByEmail } from "../db/queries.js";
+import type { User } from "../db/schema/schema.users.js";
+import { createSession, findUserByEmail } from "../db/user.query.js";
 
 type LoginInput = {
   email: string;
@@ -29,7 +30,8 @@ export type LoginUserResult =
     };
 
 export async function loginUser(input: LoginInput) {
-  const { email, password } = input;
+  const email = input.email.toLowerCase().trim();
+  const { password } = input;
   let existing: User | null;
   try {
     existing = await findUserByEmail(email);
@@ -57,11 +59,13 @@ export async function loginUser(input: LoginInput) {
     } satisfies LoginUserResult;
   }
   const payload = { userId: existing.id, email: existing.email };
-  const refreshToken = await generateRefreshToken(payload);
+  const tokenId = randomUUID();
+  const refreshToken = await generateRefreshToken(payload, tokenId);
   const hashedRefreshToken = await hashRefreshToken(refreshToken);
   try {
     await createSession({
       userId: existing.id,
+      tokenId,
       refreshToken: hashedRefreshToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
