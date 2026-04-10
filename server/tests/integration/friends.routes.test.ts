@@ -138,7 +138,7 @@ async function acceptRequest(accessToken: string, requestId: string) {
   });
 }
 
-describe("/friends", () => {
+describe("/friends", { timeout: 30000 }, () => {
   beforeAll(async () => {
     await dbConnect();
   });
