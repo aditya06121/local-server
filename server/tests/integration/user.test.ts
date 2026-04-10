@@ -238,4 +238,61 @@ describe("/users/me", () => {
       },
     });
   });
+
+  it("returns a public profile with email and bio only for another user", async () => {
+    const viewer = await registerUser("public-viewer");
+    const target = await registerUser("public-target");
+
+    await app.inject({
+      method: "PATCH",
+      url: "/users/me",
+      remoteAddress: nextRemoteAddress(),
+      cookies: {
+        accessToken: target.accessToken,
+      },
+      payload: {
+        phone: "+91-8888888888",
+        bio: "Builds side projects late at night",
+        location: "Delhi",
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/users/${target.user.id}`,
+      remoteAddress: nextRemoteAddress(),
+      cookies: {
+        accessToken: viewer.accessToken,
+      },
+    });
+
+    const body = response.json() as {
+      data: {
+        user: {
+          id: string;
+          name: string;
+          email: string;
+          bio: string | null;
+          phone?: string;
+          location?: string;
+        };
+      };
+    };
+
+    expect(response.statusCode).toBe(200);
+    expect(body).toMatchObject({
+      success: true,
+      message: "PUBLIC_PROFILE_FETCHED",
+      data: {
+        user: {
+          id: target.user.id,
+          name: target.payload.name,
+          email: target.payload.email,
+          bio: "Builds side projects late at night",
+        },
+      },
+    });
+    expect(body.data.user.phone).toBeUndefined();
+    expect(body.data.user.location).toBeUndefined();
+  });
 });

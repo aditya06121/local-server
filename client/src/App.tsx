@@ -58,55 +58,63 @@ export default function App() {
           <Toolbar
             disableGutters
             sx={{
-              py: 1.5,
-              gap: 2,
-              alignItems: { xs: "flex-start", sm: "center" },
-              flexDirection: { xs: "column", sm: "row" },
+              py: 1,
+              gap: 1.5,
+              alignItems: "center",
+              minHeight: 0,
             }}
           >
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h5" sx={{ lineHeight: 1.1 }}>
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  lineHeight: 1.1,
+                  fontSize: { xs: "1.05rem", sm: "1.15rem" },
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
                 Hello, {user.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-                Your profile, friends, and account details all live here now.
               </Typography>
             </Box>
 
             <Stack
               direction="row"
-              spacing={1.25}
-              sx={{ width: { xs: "100%", sm: "auto" } }}
+              spacing={1}
+              sx={{
+                width: "auto",
+                flexShrink: 0,
+              }}
             >
               <Button
                 variant="outlined"
                 onClick={() => setIsProfileOpen(true)}
                 sx={{
                   justifyContent: "flex-start",
-                  px: 1.2,
-                  minWidth: { xs: 0, sm: 172 },
-                  flex: { xs: 1, sm: "0 0 auto" },
+                  px: 1,
+                  py: 0.75,
+                  minWidth: 0,
+                  minHeight: 0,
+                  borderRadius: 999,
                 }}
               >
                 <Stack direction="row" spacing={1.25} alignItems="center">
                   <Avatar
                     sx={{
-                      width: 32,
-                      height: 32,
+                      width: 28,
+                      height: 28,
                       bgcolor: alpha("#1f4d46", 0.1),
                       color: "primary.main",
-                      fontSize: 13,
+                      fontSize: 12,
                       fontWeight: 800,
                     }}
                   >
                     {getInitials(user.displayName)}
                   </Avatar>
-                  <Box sx={{ textAlign: "left" }}>
-                    <Typography variant="body2" fontWeight={700}>
+                  <Box sx={{ textAlign: "left", display: { xs: "none", sm: "block" } }}>
+                    <Typography variant="body2" fontWeight={700} sx={{ lineHeight: 1.1 }}>
                       Profile
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Edit bio, phone, location
                     </Typography>
                   </Box>
                 </Stack>
@@ -116,7 +124,13 @@ export default function App() {
                 variant="contained"
                 onClick={handleLogout}
                 disabled={isLoggingOut}
-                sx={{ flex: { xs: 1, sm: "0 0 auto" } }}
+                sx={{
+                  px: 1.75,
+                  py: 0.8,
+                  minHeight: 0,
+                  minWidth: 0,
+                  borderRadius: 999,
+                }}
               >
                 {isLoggingOut ? "Signing out..." : "Logout"}
               </Button>

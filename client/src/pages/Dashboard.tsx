@@ -1,16 +1,7 @@
 import { useDeferredValue, useEffect, useState, type ReactNode } from "react";
 import type { AxiosError } from "axios";
-import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Divider,
-  Paper,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
+import { Alert, Box, Button, CircularProgress, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 
@@ -106,34 +97,6 @@ function FlatPanel({
         ) : null}
       </Box>
       {children}
-    </Box>
-  );
-}
-
-function ProfileFact({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <Box
-      sx={{
-        border: "1px solid",
-        borderColor: "divider",
-        borderRadius: 3,
-        px: 2,
-        py: 1.5,
-        bgcolor: "background.paper",
-      }}
-    >
-      <Typography variant="caption" color="text.secondary">
-        {label}
-      </Typography>
-      <Typography variant="body2" sx={{ mt: 0.5, fontWeight: 700 }}>
-        {value}
-      </Typography>
     </Box>
   );
 }
@@ -379,108 +342,128 @@ export default function Dashboard() {
 
   return (
     <Stack spacing={3}>
-      <Paper elevation={0} className="rounded-2xl p-8">
-        <div className="grid gap-6 lg:grid-cols-[1.35fr_0.95fr]">
+      <Paper elevation={0} className="rounded-2xl p-6 sm:p-7">
+        <Box>
+          <Typography variant="overline" color="text.secondary">
+            Bio
+          </Typography>
+          <Typography
+            variant="h5"
+            sx={{
+              mt: 1.25,
+              lineHeight: 1.4,
+              fontSize: { xs: "1.1rem", sm: "1.4rem" },
+              maxWidth: 880,
+            }}
+          >
+            {user.bio?.trim()
+              ? user.bio
+              : "No bio yet. Open Profile from the navbar and add one."}
+          </Typography>
+        </Box>
+      </Paper>
+
+      <PlaceholderCard
+        title="Noticeboard"
+        description="Noticeboard will be implemented later. This block stays here so the dashboard structure matches the intended product flow."
+      />
+
+      <Paper elevation={0} className="rounded-2xl p-5 sm:p-6">
+        <Stack spacing={2.5}>
           <Box>
-            <Typography variant="overline" color="text.secondary">
-              Bio
-            </Typography>
-            <Typography variant="h5" sx={{ mt: 1.5, lineHeight: 1.35 }}>
-              {user.bio?.trim()
-                ? user.bio
-                : "No bio yet. Open Profile in the navbar and add one so this section feels like yours."}
+            <Typography variant="h6">Friends</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+              Search by email, manage requests, and keep track of your network.
             </Typography>
           </Box>
 
-          <Stack spacing={1.25}>
-            <ProfileFact label="Email" value={user.email} />
-            <ProfileFact
-              label="Phone"
-              value={user.phone?.trim() ? user.phone : "Not added yet"}
-            />
-            <ProfileFact
-              label="Location"
-              value={user.location?.trim() ? user.location : "Not added yet"}
-            />
-          </Stack>
-        </div>
-      </Paper>
+          {sectionError && <Alert severity="error">{sectionError}</Alert>}
+          {sectionNotice && <Alert severity="success">{sectionNotice}</Alert>}
 
-      <div className="grid gap-4 xl:grid-cols-[1.7fr_0.9fr]">
-        <Paper elevation={0} className="rounded-2xl p-8">
-          <Stack spacing={3}>
-            <Box>
-              <Typography variant="h5">Friends</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                Search by email, manage incoming requests, and keep track of the
-                people already connected to your account.
+          {isLoadingWorkspace ? (
+            <Stack
+              spacing={1.25}
+              alignItems="center"
+              justifyContent="center"
+              sx={{ minHeight: 220 }}
+            >
+              <CircularProgress size={30} />
+              <Typography variant="body2" color="text.secondary">
+                Loading friends
               </Typography>
-            </Box>
+            </Stack>
+          ) : (
+            <Stack spacing={2}>
+              <div className="grid gap-3 lg:grid-cols-2">
+                <FlatPanel
+                  title="Find people"
+                  subtitle="Search is email-prefix based."
+                >
+                  <Stack spacing={1.5}>
+                    <TextField
+                      label="Search by email"
+                      placeholder="Start typing an email"
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      fullWidth
+                      size="small"
+                    />
 
-            {sectionError && <Alert severity="error">{sectionError}</Alert>}
-            {sectionNotice && <Alert severity="success">{sectionNotice}</Alert>}
+                    <Typography variant="body2" color="text.secondary">
+                      {isSearching ? "Searching..." : searchFeedback}
+                    </Typography>
 
-            {isLoadingWorkspace ? (
-              <Stack
-                spacing={1.5}
-                alignItems="center"
-                justifyContent="center"
-                sx={{ minHeight: 280 }}
-              >
-                <CircularProgress size={34} />
-                <Typography variant="body2" color="text.secondary">
-                  Loading your friends workspace
-                </Typography>
-              </Stack>
-            ) : (
-              <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-                <Stack spacing={2}>
-                  <FlatPanel
-                    title="Find people"
-                    subtitle="The backend search is email-prefix based and ignores users already in your network."
-                  >
-                    <Stack spacing={2}>
-                      <TextField
-                        label="Search by email"
-                        placeholder="Start typing an email prefix"
-                        value={searchQuery}
-                        onChange={(event) => setSearchQuery(event.target.value)}
-                        fullWidth
-                      />
-
-                      <Typography variant="body2" color="text.secondary">
-                        {isSearching ? "Searching..." : searchFeedback}
-                      </Typography>
-
-                      <Stack spacing={1.25}>
-                        {searchResults.map((result) => (
-                          <Box
-                            key={result.id}
-                            sx={{
-                              border: "1px solid",
-                              borderColor: "divider",
-                              borderRadius: 3,
-                              px: 2,
-                              py: 1.75,
-                              bgcolor: "background.paper",
-                            }}
-                          >
-                            <Stack
-                              direction={{ xs: "column", sm: "row" }}
-                              spacing={1.5}
-                              justifyContent="space-between"
-                              alignItems={{ xs: "flex-start", sm: "center" }}
-                            >
-                              <Box>
-                                <Typography variant="subtitle1" fontWeight={700}>
-                                  {result.name}
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary">
-                                  {result.email}
-                                </Typography>
-                              </Box>
+                    <Stack spacing={1}>
+                      {searchResults.map((result) => (
+                        <Box
+                          key={result.id}
+                          sx={{
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: 3,
+                            px: 1.5,
+                            py: 1.25,
+                            bgcolor: "background.paper",
+                          }}
+                        >
+                          <Stack spacing={1}>
+                            <Box>
+                              <Typography
+                                component={RouterLink}
+                                to={`/profiles/${result.id}`}
+                                variant="subtitle2"
+                                fontWeight={700}
+                                sx={{
+                                  color: "text.primary",
+                                  textDecoration: "none",
+                                  "&:hover": {
+                                    textDecoration: "underline",
+                                  },
+                                }}
+                              >
+                                {result.name}
+                              </Typography>
+                              <Typography
+                                component={RouterLink}
+                                to={`/profiles/${result.id}`}
+                                variant="body2"
+                                color="text.secondary"
+                                sx={{
+                                  display: "inline-block",
+                                  mt: 0.25,
+                                  textDecoration: "none",
+                                  "&:hover": {
+                                    textDecoration: "underline",
+                                  },
+                                }}
+                              >
+                                {result.email}
+                              </Typography>
+                            </Box>
+                            <Box>
                               <Button
                                 variant="contained"
+                                size="small"
                                 onClick={() => handleSendRequest(result.email)}
                                 disabled={busyAction === `send:${result.email}`}
                               >
@@ -488,146 +471,64 @@ export default function Dashboard() {
                                   ? "Sending..."
                                   : "Add friend"}
                               </Button>
-                            </Stack>
-                          </Box>
-                        ))}
-                      </Stack>
+                            </Box>
+                          </Stack>
+                        </Box>
+                      ))}
                     </Stack>
-                  </FlatPanel>
-
-                  <FlatPanel
-                    title={`Pending requests (${requests.length})`}
-                    subtitle="These are inbound requests waiting on your decision."
-                  >
-                    {requests.length === 0 ? (
-                      <Typography variant="body2" color="text.secondary">
-                        No pending requests right now.
-                      </Typography>
-                    ) : (
-                      <Stack spacing={1.25}>
-                        {requests.map((request) => (
-                          <Box
-                            key={request.id}
-                            sx={{
-                              border: "1px solid",
-                              borderColor: "divider",
-                              borderRadius: 3,
-                              px: 2,
-                              py: 1.75,
-                              bgcolor: "background.paper",
-                            }}
-                          >
-                            <Typography variant="subtitle1" fontWeight={700}>
-                              {request.fromUser.name}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                              {request.fromUser.email}
-                            </Typography>
-
-                            <Stack direction="row" spacing={1.25} sx={{ mt: 2 }}>
-                              <Button
-                                variant="contained"
-                                onClick={() => handleAcceptRequest(request.id)}
-                                disabled={busyAction === `accept:${request.id}`}
-                              >
-                                {busyAction === `accept:${request.id}`
-                                  ? "Accepting..."
-                                  : "Accept"}
-                              </Button>
-                              <Button
-                                variant="outlined"
-                                onClick={() => handleRejectRequest(request.id)}
-                                disabled={busyAction === `reject:${request.id}`}
-                              >
-                                {busyAction === `reject:${request.id}`
-                                  ? "Rejecting..."
-                                  : "Reject"}
-                              </Button>
-                            </Stack>
-                          </Box>
-                        ))}
-                      </Stack>
-                    )}
-                  </FlatPanel>
-                </Stack>
+                  </Stack>
+                </FlatPanel>
 
                 <FlatPanel
-                  title={`Your friends (${friends.length})`}
-                  subtitle="Everything the backend exposes about each friend is surfaced here."
+                  title={`Pending requests (${requests.length})`}
+                  subtitle="Incoming requests waiting on you."
                 >
-                  {friends.length === 0 ? (
+                  {requests.length === 0 ? (
                     <Typography variant="body2" color="text.secondary">
-                      No friends yet. Search by email on the left to start
-                      building the list.
+                      No pending requests right now.
                     </Typography>
                   ) : (
-                    <Stack spacing={1.5}>
-                      {friends.map((friend) => (
+                    <Stack spacing={1}>
+                      {requests.map((request) => (
                         <Box
-                          key={friend.id}
+                          key={request.id}
                           sx={{
                             border: "1px solid",
                             borderColor: "divider",
                             borderRadius: 3,
-                            p: 2.25,
+                            px: 1.5,
+                            py: 1.25,
                             bgcolor: "background.paper",
                           }}
                         >
-                          <Stack
-                            direction={{ xs: "column", sm: "row" }}
-                            spacing={1.5}
-                            justifyContent="space-between"
-                            alignItems={{ xs: "flex-start", sm: "flex-start" }}
-                          >
-                            <Box sx={{ flex: 1 }}>
-                              <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
-                                {friend.name}
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ mt: 0.65 }}
-                              >
-                                {friend.email}
-                              </Typography>
-                            </Box>
-                            <Button
-                              variant="outlined"
-                              color="secondary"
-                              onClick={() => handleRemoveFriend(friend.id)}
-                              disabled={busyAction === `remove:${friend.id}`}
-                            >
-                              {busyAction === `remove:${friend.id}`
-                                ? "Removing..."
-                                : "Remove"}
-                            </Button>
-                          </Stack>
-
-                          <Divider sx={{ my: 2 }} />
-
-                          <Typography variant="body2" sx={{ lineHeight: 1.7 }}>
-                            {friend.bio?.trim()
-                              ? friend.bio
-                              : "No bio added by this friend yet."}
+                          <Typography variant="subtitle2" fontWeight={700}>
+                            {request.fromUser.name}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4 }}>
+                            {request.fromUser.email}
                           </Typography>
 
-                          <Stack
-                            direction="row"
-                            spacing={1}
-                            useFlexGap
-                            flexWrap="wrap"
-                            sx={{ mt: 2 }}
-                          >
-                            <ProfileFact
-                              label="Phone"
-                              value={friend.phone?.trim() ? friend.phone : "Hidden"}
-                            />
-                            <ProfileFact
-                              label="Location"
-                              value={
-                                friend.location?.trim() ? friend.location : "Not shared"
-                              }
-                            />
+                          <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+                            <Button
+                              variant="contained"
+                              size="small"
+                              onClick={() => handleAcceptRequest(request.id)}
+                              disabled={busyAction === `accept:${request.id}`}
+                            >
+                              {busyAction === `accept:${request.id}`
+                                ? "Accepting..."
+                                : "Accept"}
+                            </Button>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => handleRejectRequest(request.id)}
+                              disabled={busyAction === `reject:${request.id}`}
+                            >
+                              {busyAction === `reject:${request.id}`
+                                ? "Rejecting..."
+                                : "Reject"}
+                            </Button>
                           </Stack>
                         </Box>
                       ))}
@@ -635,21 +536,87 @@ export default function Dashboard() {
                   )}
                 </FlatPanel>
               </div>
-            )}
-          </Stack>
-        </Paper>
 
-        <Stack spacing={2}>
-          <PlaceholderCard
-            title="DMs"
-            description="Direct messages will be implemented later. The dashboard already leaves space for them."
-          />
-          <PlaceholderCard
-            title="Noticeboard"
-            description="Noticeboard will be implemented later. This card keeps the roadmap visible without inventing unsupported UI."
-          />
+              <FlatPanel
+                title={`Your friends (${friends.length})`}
+                subtitle="Compact view of the people already connected to you."
+              >
+                {friends.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary">
+                    No friends yet. Start from the search panel above.
+                  </Typography>
+                ) : (
+                  <Stack spacing={1}>
+                    {friends.map((friend) => (
+                      <Box
+                        key={friend.id}
+                        sx={{
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: 3,
+                          px: 1.5,
+                          py: 1.35,
+                          bgcolor: "background.paper",
+                        }}
+                      >
+                        <Stack
+                          direction={{ xs: "column", sm: "row" }}
+                          spacing={1.25}
+                          justifyContent="space-between"
+                          alignItems={{ xs: "flex-start", sm: "center" }}
+                        >
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="subtitle2" fontWeight={700}>
+                              {friend.name}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{
+                                mt: 0.35,
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              {friend.email}
+                            </Typography>
+                            <Typography
+                              variant="body2"
+                              color="text.secondary"
+                              sx={{ mt: 0.75, lineHeight: 1.6 }}
+                            >
+                              {friend.bio?.trim()
+                                ? friend.bio
+                                : "No bio added yet."}
+                            </Typography>
+                          </Box>
+
+                          <Button
+                            variant="outlined"
+                            color="secondary"
+                            size="small"
+                            onClick={() => handleRemoveFriend(friend.id)}
+                            disabled={busyAction === `remove:${friend.id}`}
+                            sx={{ flexShrink: 0 }}
+                          >
+                            {busyAction === `remove:${friend.id}`
+                              ? "Removing..."
+                              : "Remove"}
+                          </Button>
+                        </Stack>
+                      </Box>
+                    ))}
+                  </Stack>
+                )}
+              </FlatPanel>
+            </Stack>
+          )}
         </Stack>
-      </div>
+      </Paper>
+
+      <PlaceholderCard
+        title="DMs"
+        description="Direct messages will be implemented later."
+      />
     </Stack>
   );
 }

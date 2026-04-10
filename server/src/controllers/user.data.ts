@@ -1,4 +1,8 @@
-import { updateMyProfile, getMyProfile } from "../services/user.data.js";
+import {
+  updateMyProfile,
+  getMyProfile,
+  getPublicProfile,
+} from "../services/user.data.js";
 import { FastifyRequest, FastifyReply } from "fastify";
 import { failure, success } from "../utils/response.js";
 
@@ -44,6 +48,24 @@ export async function getHandler(req: FastifyRequest, res: FastifyReply) {
     const user = await getMyProfile(userId);
 
     return res.send(success("PROFILE_FETCHED", { user }));
+  } catch (err) {
+    if ((err as Error).message === "USER_NOT_FOUND") {
+      return res.status(404).send(failure("USER_NOT_FOUND", "User not found"));
+    }
+
+    return res
+      .status(500)
+      .send(failure("INTERNAL_ERROR", (err as Error).message));
+  }
+}
+
+export async function getPublicHandler(req: FastifyRequest, res: FastifyReply) {
+  try {
+    const { userId } = req.params as { userId: string };
+
+    const user = await getPublicProfile(userId);
+
+    return res.send(success("PUBLIC_PROFILE_FETCHED", { user }));
   } catch (err) {
     if ((err as Error).message === "USER_NOT_FOUND") {
       return res.status(404).send(failure("USER_NOT_FOUND", "User not found"));

@@ -18,6 +18,17 @@ const userProfileSchema = {
   },
 };
 
+const publicUserProfileSchema = {
+  type: "object",
+  required: ["id", "name", "email"],
+  properties: {
+    id: { type: "string" },
+    name: { type: "string" },
+    email: { type: "string", format: "email" },
+    bio: { type: ["string", "null"] },
+  },
+};
+
 export const getProfileSchema = {
   response: {
     200: createApiSuccessSchema({
@@ -50,6 +61,29 @@ export const updateProfileSchema = {
       required: ["user"],
       properties: {
         user: userProfileSchema,
+      },
+    }),
+    401: failureSchema,
+    404: failureSchema,
+    429: failureSchema,
+    500: failureSchema,
+  },
+};
+
+export const getPublicProfileSchema = {
+  params: {
+    type: "object",
+    required: ["userId"],
+    properties: {
+      userId: { type: "string" },
+    },
+  },
+  response: {
+    200: createApiSuccessSchema({
+      type: "object",
+      required: ["user"],
+      properties: {
+        user: publicUserProfileSchema,
       },
     }),
     401: failureSchema,

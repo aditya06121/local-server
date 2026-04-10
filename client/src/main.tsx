@@ -14,6 +14,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import Login from "./pages/Login.tsx";
 import Logout from "./pages/Logout.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import PublicProfile from "./pages/PublicProfile.tsx";
 import Register from "./pages/Register.tsx";
 import theme from "./theme.ts";
 
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
           {
             index: true,
             element: <Dashboard />,
+          },
+          {
+            path: "profiles/:userId",
+            element: <PublicProfile />,
           },
         ],
       },

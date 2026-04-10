@@ -28,3 +28,18 @@ export async function getMyProfile(userId: string) {
 
   return user;
 }
+
+export async function getPublicProfile(userId: string) {
+  const user = await findPublicUserById(userId);
+
+  if (!user) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    bio: user.bio,
+  };
+}
