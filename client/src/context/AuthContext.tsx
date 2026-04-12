@@ -11,6 +11,7 @@ import {
   logout as logoutRequest,
   type AuthUser,
 } from "../lib/auth";
+
 type AuthContextType = {
   user: AuthUser | null;
   isAuthenticated: boolean;

@@ -222,6 +222,7 @@ describe("friend.service", () => {
       vi.mocked(createFriendRequest).mockRejectedValueOnce(
         Object.assign(new Error("duplicate key"), { code: "23505" }),
       );
+
       vi.mocked(isUniqueViolation).mockReturnValue(true);
 
       const result = await sendFriendRequest("user-1", "friend@mail.com");
