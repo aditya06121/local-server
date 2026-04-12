@@ -81,14 +81,21 @@ describe("friend.service", () => {
 
       const result = await sendFriendRequest("user-1", "  Friend@Mail.com  ");
 
-      expect(findUserByEmailExact).toHaveBeenCalledWith("friend@mail.com", txMock);
+      expect(findUserByEmailExact).toHaveBeenCalledWith(
+        "friend@mail.com",
+        txMock,
+      );
       expect(findFriendship).toHaveBeenCalledWith("user-1", "user-2", txMock);
       expect(findFriendRequestBetweenUsers).toHaveBeenCalledWith(
         "user-1",
         "user-2",
         txMock,
       );
-      expect(createFriendRequest).toHaveBeenCalledWith("user-1", "user-2", txMock);
+      expect(createFriendRequest).toHaveBeenCalledWith(
+        "user-1",
+        "user-2",
+        txMock,
+      );
       expect(result).toEqual({ request });
       expect(transactionMock).toHaveBeenCalledTimes(1);
     });
@@ -98,10 +105,14 @@ describe("friend.service", () => {
         id: "user-1",
       } as never);
 
-      await expect(sendFriendRequest("user-1", "self@mail.com")).rejects.toThrow(
-        "CANNOT_SELF_REQUEST",
+      await expect(
+        sendFriendRequest("user-1", "self@mail.com"),
+      ).rejects.toThrow("CANNOT_SELF_REQUEST");
+      expect(findFriendship).not.toHaveBeenCalledWith(
+        "user-1",
+        "user-1",
+        txMock,
       );
-      expect(findFriendship).not.toHaveBeenCalledWith("user-1", "user-1", txMock);
       expect(createFriendRequest).not.toHaveBeenCalled();
     });
 
@@ -109,11 +120,13 @@ describe("friend.service", () => {
       vi.mocked(findUserByEmailExact).mockResolvedValue({
         id: "user-2",
       } as never);
-      vi.mocked(findFriendship).mockResolvedValue({ id: "friendship" } as never);
+      vi.mocked(findFriendship).mockResolvedValue({
+        id: "friendship",
+      } as never);
 
-      await expect(sendFriendRequest("user-1", "friend@mail.com")).rejects.toThrow(
-        "ALREADY_FRIENDS",
-      );
+      await expect(
+        sendFriendRequest("user-1", "friend@mail.com"),
+      ).rejects.toThrow("ALREADY_FRIENDS");
       expect(findFriendRequestBetweenUsers).not.toHaveBeenCalled();
       expect(createFriendRequest).not.toHaveBeenCalled();
     });
@@ -130,9 +143,9 @@ describe("friend.service", () => {
         status: "pending",
       } as never);
 
-      await expect(sendFriendRequest("user-1", "friend@mail.com")).rejects.toThrow(
-        "REQUEST_ALREADY_EXISTS",
-      );
+      await expect(
+        sendFriendRequest("user-1", "friend@mail.com"),
+      ).rejects.toThrow("REQUEST_ALREADY_EXISTS");
       expect(createFriendRequest).not.toHaveBeenCalled();
     });
 
@@ -199,7 +212,6 @@ describe("friend.service", () => {
         toUserId: "user-1",
         status: "pending",
       };
-
       vi.mocked(findUserByEmailExact).mockResolvedValue({
         id: "user-2",
       } as never);
@@ -344,7 +356,10 @@ describe("friend.service", () => {
 
       const result = await searchUsers("  TARGET  ", "user-1");
 
-      expect(searchUsersByEmailFiltered).toHaveBeenCalledWith("target", "user-1");
+      expect(searchUsersByEmailFiltered).toHaveBeenCalledWith(
+        "target",
+        "user-1",
+      );
       expect(result).toEqual(users);
     });
   });
