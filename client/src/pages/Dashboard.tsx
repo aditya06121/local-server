@@ -1,4 +1,4 @@
-import { useDeferredValue, useEffect, useState, type ReactNode } from "react";
+import { useDeferredValue, useEffect, useRef, useState, type ReactNode } from "react";
 import type { AxiosError } from "axios";
 import { Alert, Box, Button, CircularProgress, Paper, Stack, TextField, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
@@ -58,6 +58,30 @@ type SearchResponse = {
 
 type ActionResponse = {
   message?: string;
+};
+
+type Notice = {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: {
+    id: string;
+    name: string;
+    email: string;
+  };
+};
+
+type NoticesResponse = {
+  data: {
+    notices: Notice[];
+    nextCursor: string | null;
+  };
+};
+
+type PostNoticeResponse = {
+  data: {
+    notice: Notice;
+  };
 };
 
 function getErrorMessage(error: unknown, fallback: string) {
@@ -120,6 +144,246 @@ function PlaceholderCard({
       <Typography variant="body2" color="text.secondary" sx={{ mt: 1.25 }}>
         {description}
       </Typography>
+    </Paper>
+  );
+}
+
+const MAX_CONTENT_LENGTH = 500;
+
+function formatRelativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function Noticeboard({ currentUserId }: { currentUserId: string }) {
+  const [notices, setNotices] = useState<Notice[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
+  const [content, setContent] = useState("");
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const deletingRef = useRef<Set<string>>(new Set());
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function load() {
+      setIsLoading(true);
+      setError("");
+      try {
+        const res = await api.get<NoticesResponse>("/notices");
+        if (!isActive) return;
+        setNotices(res.data.data.notices);
+        setNextCursor(res.data.data.nextCursor);
+      } catch {
+        if (!isActive) return;
+        setError("Could not load the noticeboard.");
+      } finally {
+        if (isActive) setIsLoading(false);
+      }
+    }
+
+    load();
+    return () => { isActive = false; };
+  }, []);
+
+  async function handlePost() {
+    const trimmed = content.trim();
+    if (!trimmed) return;
+
+    setIsPosting(true);
+    setError("");
+    setNotice("");
+
+    try {
+      const res = await api.post<PostNoticeResponse>("/notices", { content: trimmed });
+      setNotices((prev) => [res.data.data.notice, ...prev]);
+      setContent("");
+      setNotice("Notice posted.");
+    } catch {
+      setError("Could not post your notice.");
+    } finally {
+      setIsPosting(false);
+    }
+  }
+
+  async function handleDelete(noticeId: string) {
+    deletingRef.current.add(noticeId);
+    setDeletingIds(new Set(deletingRef.current));
+    setError("");
+
+    try {
+      await api.delete(`/notices/${noticeId}`);
+      setNotices((prev) => prev.filter((n) => n.id !== noticeId));
+    } catch {
+      setError("Could not delete that notice.");
+    } finally {
+      deletingRef.current.delete(noticeId);
+      setDeletingIds(new Set(deletingRef.current));
+    }
+  }
+
+  async function handleLoadMore() {
+    if (!nextCursor) return;
+    setIsLoadingMore(true);
+
+    try {
+      const res = await api.get<NoticesResponse>("/notices", {
+        params: { cursor: nextCursor },
+      });
+      setNotices((prev) => [...prev, ...res.data.data.notices]);
+      setNextCursor(res.data.data.nextCursor);
+    } catch {
+      setError("Could not load more notices.");
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }
+
+  const remaining = MAX_CONTENT_LENGTH - content.length;
+
+  return (
+    <Paper elevation={0} className="rounded-lg p-5 sm:p-6">
+      <Stack spacing={2.5}>
+        <Box>
+          <Typography variant="h6">Noticeboard</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+            Post a short message for everyone to see.
+          </Typography>
+        </Box>
+
+        {error && <Alert severity="error" onClose={() => setError("")}>{error}</Alert>}
+        {notice && <Alert severity="success" onClose={() => setNotice("")}>{notice}</Alert>}
+
+        <Box
+          sx={{
+            border: "1px solid",
+            borderColor: "divider",
+            borderRadius: 2,
+            p: 2,
+            bgcolor: "rgba(255,255,255,0.7)",
+          }}
+        >
+          <Stack spacing={1.5}>
+            <TextField
+              multiline
+              minRows={2}
+              maxRows={5}
+              placeholder="Write a notice..."
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              inputProps={{ maxLength: MAX_CONTENT_LENGTH }}
+              fullWidth
+              size="small"
+            />
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography
+                variant="caption"
+                color={remaining < 50 ? "error" : "text.secondary"}
+              >
+                {remaining} characters remaining
+              </Typography>
+              <Button
+                variant="contained"
+                size="small"
+                onClick={handlePost}
+                disabled={isPosting || !content.trim()}
+              >
+                {isPosting ? "Posting..." : "Post"}
+              </Button>
+            </Stack>
+          </Stack>
+        </Box>
+
+        {isLoading ? (
+          <Stack spacing={1.25} alignItems="center" justifyContent="center" sx={{ minHeight: 120 }}>
+            <CircularProgress size={28} />
+            <Typography variant="body2" color="text.secondary">Loading notices</Typography>
+          </Stack>
+        ) : notices.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            No notices yet. Be the first to post one.
+          </Typography>
+        ) : (
+          <Stack spacing={1}>
+            {notices.map((n) => (
+              <Box
+                key={n.id}
+                sx={{
+                  border: "1px solid",
+                  borderColor: "divider",
+                  borderRadius: 2,
+                  px: 1.5,
+                  py: 1.25,
+                  bgcolor: "background.paper",
+                }}
+              >
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1}>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Stack direction="row" spacing={1} alignItems="baseline" flexWrap="wrap">
+                      <Typography
+                        component={RouterLink}
+                        to={`/profiles/${n.author.id}`}
+                        variant="subtitle2"
+                        fontWeight={700}
+                        sx={{
+                          color: "text.primary",
+                          textDecoration: "none",
+                          "&:hover": { textDecoration: "underline" },
+                        }}
+                      >
+                        {n.author.name}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {formatRelativeTime(n.createdAt)}
+                      </Typography>
+                    </Stack>
+                    <Typography
+                      variant="body2"
+                      sx={{ mt: 0.5, whiteSpace: "pre-wrap", wordBreak: "break-word" }}
+                    >
+                      {n.content}
+                    </Typography>
+                  </Box>
+                  {n.author.id === currentUserId && (
+                    <Button
+                      variant="outlined"
+                      color="secondary"
+                      size="small"
+                      onClick={() => handleDelete(n.id)}
+                      disabled={deletingIds.has(n.id)}
+                      sx={{ flexShrink: 0, minWidth: 0, px: 1 }}
+                    >
+                      {deletingIds.has(n.id) ? "…" : "Delete"}
+                    </Button>
+                  )}
+                </Stack>
+              </Box>
+            ))}
+
+            {nextCursor && (
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={handleLoadMore}
+                disabled={isLoadingMore}
+                sx={{ alignSelf: "center", mt: 0.5 }}
+              >
+                {isLoadingMore ? "Loading..." : "Load more"}
+              </Button>
+            )}
+          </Stack>
+        )}
+      </Stack>
     </Paper>
   );
 }
@@ -364,10 +628,7 @@ export default function Dashboard() {
         </Box>
       </Paper>
 
-      <PlaceholderCard
-        title="Noticeboard"
-        description="Noticeboard will be implemented later. This block stays here so the dashboard structure matches the intended product flow."
-      />
+      <Noticeboard currentUserId={user.id} />
 
       <Paper elevation={0} className="rounded-lg p-5 sm:p-6">
         <Stack spacing={2.5}>
