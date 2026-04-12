@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import type { WebSocket } from "@fastify/websocket";
 import { execFileSync } from "child_process";
-import * as pty from "node-pty";
+import * as pty from "@homebridge/node-pty-prebuilt-multiarch";
 import { failure, success } from "../utils/response.js";
 import {
   authenticateOsUser,
