@@ -5,6 +5,7 @@ import rateLimit from "@fastify/rate-limit";
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import friendsRoutes from "./routes/friend.routes.js";
+import noticeRoutes from "./routes/notice.routes.js";
 import { failure } from "./utils/response.js";
 
 export function buildApp(): FastifyInstance {
@@ -33,6 +34,7 @@ export function buildApp(): FastifyInstance {
   app.register(authRoutes, { prefix: "/auth" });
   app.register(userRoutes, { prefix: "/users" });
   app.register(friendsRoutes, { prefix: "/friends" });
+  app.register(noticeRoutes, { prefix: "/notices" });
 
   return app;
 }
