@@ -1,9 +1,7 @@
 export default function Terminal() {
-  const wettyUrl = `http://${window.location.hostname}:3001`;
-
   return (
     <iframe
-      src={wettyUrl}
+      src="/wetty/"
       style={{
         position: "fixed",
         top: 0,
