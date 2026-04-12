@@ -116,7 +116,7 @@ export function terminalWsHandler(socket: WebSocket, req: FastifyRequest) {
         "type" in parsed &&
         (parsed as { type: unknown }).type === "resize"
       ) {
-        const { cols, rows } = parsed as { cols: unknown; rows: unknown };
+        const { cols, rows } = parsed as unknown as { cols: unknown; rows: unknown };
         if (typeof cols === "number" && typeof rows === "number") {
           ptyProcess.resize(cols, rows);
           return;
