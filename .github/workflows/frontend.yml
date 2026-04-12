@@ -71,10 +71,11 @@ jobs:
         run: |
           eval $(ssh-agent -s)
           echo "${{ secrets.PI_SSH_KEY }}" | ssh-add -
-          ssh -o StrictHostKeyChecking=no aditya@${{ secrets.PI_TAILSCALE_IP }} '
+          ssh -o StrictHostKeyChecking=no aditya@${{ secrets.PI_TAILSCALE_IP }} "
             cd /home/aditya/app &&
             git pull &&
+            echo '${{ secrets.WETTY_HTPASSWD }}' > .htpasswd &&
             docker compose pull frontend &&
             docker compose up -d frontend &&
             docker compose restart cloudflared
-          '
+          "
