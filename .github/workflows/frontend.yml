@@ -75,5 +75,6 @@ jobs:
             cd /home/aditya/app &&
             git pull &&
             docker compose pull frontend &&
-            docker compose up -d frontend
+            docker compose up -d frontend &&
+            docker compose restart cloudflared
           '
