@@ -1,13 +1,11 @@
 import Fastify, { type FastifyInstance } from "fastify";
 import cookie from "@fastify/cookie";
 import rateLimit from "@fastify/rate-limit";
-import websocket from "@fastify/websocket";
 
 import authRoutes from "./routes/auth.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import friendsRoutes from "./routes/friend.routes.js";
 import noticeRoutes from "./routes/notice.routes.js";
-import terminalRoutes from "./routes/terminal.routes.js";
 import { failure } from "./utils/response.js";
 
 export function buildApp(): FastifyInstance {
@@ -28,7 +26,6 @@ export function buildApp(): FastifyInstance {
       ),
     }),
   });
-  app.register(websocket);
 
   app.get("/", async () => {
     return { status: "ok" };
@@ -38,7 +35,6 @@ export function buildApp(): FastifyInstance {
   app.register(userRoutes, { prefix: "/users" });
   app.register(friendsRoutes, { prefix: "/friends" });
   app.register(noticeRoutes, { prefix: "/notices" });
-  app.register(terminalRoutes, { prefix: "/term" });
 
   return app;
 }

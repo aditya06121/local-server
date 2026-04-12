@@ -19,6 +19,18 @@ services:
     networks:
       - app-network
 
+  wetty:
+    image: wettyoss/wetty
+    container_name: wetty
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    command: ["--ssh-host", "host.docker.internal", "--ssh-port", "22", "--port", "3001", "--base", "/"]
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - app-network
+
   cloudflared:
     image: cloudflare/cloudflared:latest
     container_name: cloudflared

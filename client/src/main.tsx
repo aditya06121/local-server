@@ -16,7 +16,6 @@ import Logout from "./pages/Logout.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PublicProfile from "./pages/PublicProfile.tsx";
 import Register from "./pages/Register.tsx";
-import Terminal from "./pages/Terminal.tsx";
 import theme from "./theme.ts";
 
 const router = createBrowserRouter([
@@ -42,10 +41,6 @@ const router = createBrowserRouter([
         element: <Navigate to="/" replace />,
       },
     ],
-  },
-  {
-    path: "/term",
-    element: <Terminal />,
   },
   {
     path: "/login",
