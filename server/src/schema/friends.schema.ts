@@ -27,14 +27,18 @@ const friendSchema = {
 
 const friendRequestSchema = {
   type: "object",
-  required: ["id", "status", "fromUser"],
+  required: ["id", "status", "direction", "otherUser"],
   properties: {
     id: { type: "string" },
     status: {
       type: "string",
       enum: ["pending", "accepted", "rejected"],
     },
-    fromUser: userSchema,
+    direction: {
+      type: "string",
+      enum: ["received", "sent"],
+    },
+    otherUser: userSchema,
   },
 };
 

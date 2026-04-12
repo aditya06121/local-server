@@ -474,7 +474,8 @@ describe("/friends", { timeout: 30000 }, () => {
           {
             id: expect.any(String),
             status: "pending",
-            fromUser: {
+            direction: "received",
+            otherUser: {
               id: sender.user.id,
               name: sender.payload.name,
               email: sender.payload.email,
@@ -489,7 +490,8 @@ describe("/friends", { timeout: 30000 }, () => {
     expect(storedRequests).toHaveLength(1);
     expect(storedRequests[0]).toMatchObject({
       status: "pending",
-      fromUser: {
+      direction: "received",
+      otherUser: {
         id: sender.user.id,
         email: sender.payload.email,
       },
