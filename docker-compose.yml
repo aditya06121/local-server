@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
     ports:
       - "3001:3001"
-    command: ["--ssh-host", "host.docker.internal", "--ssh-port", "22", "--port", "3001", "--base", "/wetty/"]
+    command: ["--ssh-host", "host.docker.internal", "--ssh-port", "22", "--port", "3001", "--base", "/wetty"]
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:

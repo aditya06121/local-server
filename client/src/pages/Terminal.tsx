@@ -1,7 +1,7 @@
 export default function Terminal() {
   return (
     <iframe
-      src="/wetty/"
+      src="/wetty"
       style={{
         position: "fixed",
         top: 0,
