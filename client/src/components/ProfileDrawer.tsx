@@ -128,9 +128,6 @@ export default function ProfileDrawer({
               </Avatar>
               <Box>
                 <Typography variant="h6">Profile</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Keep your details current. Password reset comes later.
-                </Typography>
               </Box>
             </Stack>
           </Box>
@@ -147,7 +144,9 @@ export default function ProfileDrawer({
           >
             <Stack spacing={2.25}>
               {error && <Alert severity="error">{error}</Alert>}
-              {successMessage && <Alert severity="success">{successMessage}</Alert>}
+              {successMessage && (
+                <Alert severity="success">{successMessage}</Alert>
+              )}
 
               <Box>
                 <Typography variant="overline" color="text.secondary">
@@ -158,12 +157,7 @@ export default function ProfileDrawer({
                 </Typography>
               </Box>
 
-              <TextField
-                label="Email"
-                value={user.email}
-                disabled
-                fullWidth
-              />
+              <TextField label="Email" value={user.email} disabled fullWidth />
 
               <TextField
                 label="Phone"
@@ -190,12 +184,6 @@ export default function ProfileDrawer({
                 minRows={5}
                 fullWidth
               />
-
-              <Typography variant="body2" color="text.secondary">
-                Name and password updates are not exposed by the current backend
-                yet, so this drawer only uses the editable profile APIs that
-                already exist.
-              </Typography>
             </Stack>
           </Box>
 
@@ -211,7 +199,12 @@ export default function ProfileDrawer({
               >
                 Close
               </Button>
-              <Button type="submit" variant="contained" fullWidth disabled={isSaving}>
+              <Button
+                type="submit"
+                variant="contained"
+                fullWidth
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save details"}
               </Button>
             </Stack>
