@@ -17,7 +17,8 @@ type Friend = {
 type PendingRequest = {
   id: string;
   status: "pending" | "accepted" | "rejected";
-  fromUser: {
+  direction: "received" | "sent";
+  otherUser: {
     id: string;
     name: string;
     email: string;
@@ -83,7 +84,7 @@ function FlatPanel({
       sx={{
         border: "1px solid",
         borderColor: "divider",
-        borderRadius: 4,
+        borderRadius: 2,
         bgcolor: "rgba(255, 255, 255, 0.7)",
         p: 2.5,
       }}
@@ -109,7 +110,7 @@ function PlaceholderCard({
   description: string;
 }) {
   return (
-    <Paper elevation={0} className="rounded-2xl p-6">
+    <Paper elevation={0} className="rounded-lg p-6">
       <Typography variant="overline" color="text.secondary">
         Later
       </Typography>
@@ -342,7 +343,7 @@ export default function Dashboard() {
 
   return (
     <Stack spacing={3}>
-      <Paper elevation={0} className="rounded-2xl p-6 sm:p-7">
+      <Paper elevation={0} className="rounded-lg p-6 sm:p-7">
         <Box>
           <Typography variant="overline" color="text.secondary">
             Bio
@@ -368,7 +369,7 @@ export default function Dashboard() {
         description="Noticeboard will be implemented later. This block stays here so the dashboard structure matches the intended product flow."
       />
 
-      <Paper elevation={0} className="rounded-2xl p-5 sm:p-6">
+      <Paper elevation={0} className="rounded-lg p-5 sm:p-6">
         <Stack spacing={2.5}>
           <Box>
             <Typography variant="h6">Friends</Typography>
@@ -420,7 +421,7 @@ export default function Dashboard() {
                           sx={{
                             border: "1px solid",
                             borderColor: "divider",
-                            borderRadius: 3,
+                            borderRadius: 2,
                             px: 1.5,
                             py: 1.25,
                             bgcolor: "background.paper",
@@ -481,7 +482,7 @@ export default function Dashboard() {
 
                 <FlatPanel
                   title={`Pending requests (${requests.length})`}
-                  subtitle="Incoming requests waiting on you."
+                  subtitle="Sent and received requests waiting to be accepted."
                 >
                   {requests.length === 0 ? (
                     <Typography variant="body2" color="text.secondary">
@@ -495,15 +496,35 @@ export default function Dashboard() {
                           sx={{
                             border: "1px solid",
                             borderColor: "divider",
-                            borderRadius: 3,
+                            borderRadius: 2,
                             px: 1.5,
                             py: 1.25,
                             bgcolor: "background.paper",
                           }}
                         >
+                          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.5 }}>
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                px: 0.75,
+                                py: 0.25,
+                                borderRadius: 1,
+                                bgcolor: request.direction === "received"
+                                  ? "rgba(31, 77, 70, 0.08)"
+                                  : "rgba(180, 107, 77, 0.08)",
+                                color: request.direction === "received"
+                                  ? "primary.main"
+                                  : "secondary.main",
+                                fontWeight: 700,
+                                lineHeight: 1.6,
+                              }}
+                            >
+                              {request.direction === "received" ? "Received" : "Sent"}
+                            </Typography>
+                          </Stack>
                           <Typography
                             component={RouterLink}
-                            to={`/profiles/${request.fromUser.id}`}
+                            to={`/profiles/${request.otherUser.id}`}
                             variant="subtitle2"
                             fontWeight={700}
                             sx={{
@@ -514,11 +535,11 @@ export default function Dashboard() {
                               },
                             }}
                           >
-                            {request.fromUser.name}
+                            {request.otherUser.name}
                           </Typography>
                           <Typography
                             component={RouterLink}
-                            to={`/profiles/${request.fromUser.id}`}
+                            to={`/profiles/${request.otherUser.id}`}
                             variant="body2"
                             color="text.secondary"
                             sx={{
@@ -530,31 +551,41 @@ export default function Dashboard() {
                               },
                             }}
                           >
-                            {request.fromUser.email}
+                            {request.otherUser.email}
                           </Typography>
 
-                          <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
-                            <Button
-                              variant="contained"
-                              size="small"
-                              onClick={() => handleAcceptRequest(request.id)}
-                              disabled={busyAction === `accept:${request.id}`}
+                          {request.direction === "received" ? (
+                            <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+                              <Button
+                                variant="contained"
+                                size="small"
+                                onClick={() => handleAcceptRequest(request.id)}
+                                disabled={busyAction === `accept:${request.id}`}
+                              >
+                                {busyAction === `accept:${request.id}`
+                                  ? "Accepting..."
+                                  : "Accept"}
+                              </Button>
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={() => handleRejectRequest(request.id)}
+                                disabled={busyAction === `reject:${request.id}`}
+                              >
+                                {busyAction === `reject:${request.id}`
+                                  ? "Rejecting..."
+                                  : "Reject"}
+                              </Button>
+                            </Stack>
+                          ) : (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ display: "block", mt: 1 }}
                             >
-                              {busyAction === `accept:${request.id}`
-                                ? "Accepting..."
-                                : "Accept"}
-                            </Button>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => handleRejectRequest(request.id)}
-                              disabled={busyAction === `reject:${request.id}`}
-                            >
-                              {busyAction === `reject:${request.id}`
-                                ? "Rejecting..."
-                                : "Reject"}
-                            </Button>
-                          </Stack>
+                              Awaiting their response.
+                            </Typography>
+                          )}
                         </Box>
                       ))}
                     </Stack>
@@ -578,7 +609,7 @@ export default function Dashboard() {
                         sx={{
                           border: "1px solid",
                           borderColor: "divider",
-                          borderRadius: 3,
+                          borderRadius: 2,
                           px: 1.5,
                           py: 1.35,
                           bgcolor: "background.paper",
@@ -591,15 +622,30 @@ export default function Dashboard() {
                           alignItems={{ xs: "flex-start", sm: "center" }}
                         >
                           <Box sx={{ minWidth: 0 }}>
-                            <Typography variant="subtitle2" fontWeight={700}>
+                            <Typography
+                              component={RouterLink}
+                              to={`/profiles/${friend.id}`}
+                              variant="subtitle2"
+                              fontWeight={700}
+                              sx={{
+                                color: "text.primary",
+                                textDecoration: "none",
+                                "&:hover": { textDecoration: "underline" },
+                              }}
+                            >
                               {friend.name}
                             </Typography>
                             <Typography
+                              component={RouterLink}
+                              to={`/profiles/${friend.id}`}
                               variant="body2"
                               color="text.secondary"
                               sx={{
+                                display: "block",
                                 mt: 0.35,
                                 wordBreak: "break-word",
+                                textDecoration: "none",
+                                "&:hover": { textDecoration: "underline" },
                               }}
                             >
                               {friend.email}

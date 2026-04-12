@@ -141,11 +141,12 @@ export async function findFriendRequestBetweenUsers(
 }
 
 export async function getPendingRequestsForUser(userId: string) {
-  return db
+  // Requests received by the current user (others sent TO me)
+  const received = await db
     .select({
       id: friendRequests.id,
       status: friendRequests.status,
-      fromUser: {
+      otherUser: {
         id: users.id,
         name: users.name,
         email: users.email,
@@ -159,6 +160,31 @@ export async function getPendingRequestsForUser(userId: string) {
         eq(friendRequests.status, "pending"),
       ),
     );
+
+  // Requests sent by the current user (I sent TO others)
+  const sent = await db
+    .select({
+      id: friendRequests.id,
+      status: friendRequests.status,
+      otherUser: {
+        id: users.id,
+        name: users.name,
+        email: users.email,
+      },
+    })
+    .from(friendRequests)
+    .innerJoin(users, eq(friendRequests.toUserId, users.id))
+    .where(
+      and(
+        eq(friendRequests.fromUserId, userId),
+        eq(friendRequests.status, "pending"),
+      ),
+    );
+
+  return [
+    ...received.map((r) => ({ ...r, direction: "received" as const })),
+    ...sent.map((r) => ({ ...r, direction: "sent" as const })),
+  ];
 }
 
 export async function updateFriendRequestStatus(

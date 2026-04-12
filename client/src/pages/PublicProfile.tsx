@@ -91,13 +91,13 @@ export default function PublicProfile() {
           to="/"
           variant="outlined"
           size="small"
-          sx={{ borderRadius: 999 }}
+          sx={{ borderRadius: 2 }}
         >
           Back to dashboard
         </Button>
       </Box>
 
-      <Paper elevation={0} className="rounded-2xl p-6 sm:p-7">
+      <Paper elevation={0} className="rounded-lg p-6 sm:p-7">
         {isLoading ? (
           <Stack
             spacing={1.25}
@@ -130,7 +130,7 @@ export default function PublicProfile() {
               sx={{
                 border: "1px solid",
                 borderColor: "divider",
-                borderRadius: 4,
+                borderRadius: 2,
                 p: 2.5,
                 bgcolor: "rgba(255, 255, 255, 0.72)",
               }}

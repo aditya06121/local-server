@@ -22,7 +22,7 @@ let theme = createTheme({
     divider: "rgba(229, 231, 235, 1)",
   },
   shape: {
-    borderRadius: 14,
+    borderRadius: 4,
   },
   typography: {
     fontFamily: '"Manrope", "Avenir Next", "Segoe UI", sans-serif',
@@ -87,7 +87,7 @@ let theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 8,
           paddingInline: 18,
           minHeight: 44,
         },
@@ -96,7 +96,7 @@ let theme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 6,
           backgroundColor: alpha("#ffffff", 0.8),
         },
       },
@@ -104,7 +104,7 @@ let theme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 6,
           fontWeight: 700,
         },
       },

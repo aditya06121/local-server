@@ -96,7 +96,7 @@ export default function App() {
                   py: 0.75,
                   minWidth: 0,
                   minHeight: 0,
-                  borderRadius: 999,
+                  borderRadius: 2,
                 }}
               >
                 <Stack direction="row" spacing={1.25} alignItems="center">
@@ -129,7 +129,7 @@ export default function App() {
                   py: 0.8,
                   minHeight: 0,
                   minWidth: 0,
-                  borderRadius: 999,
+                  borderRadius: 2,
                 }}
               >
                 {isLoggingOut ? "Signing out..." : "Logout"}

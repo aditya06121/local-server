@@ -41,7 +41,7 @@ export default function AuthFormShell({
         >
           <Paper
             elevation={0}
-            className="w-full overflow-hidden border border-gray-100 rounded-2xl p-8"
+            className="w-full overflow-hidden border border-gray-100 rounded-lg p-8"
           >
             <div className="mb-6 flex items-start gap-4">
               <div className="mt-1 h-16 w-1 rounded-full bg-[var(--mui-palette-primary-main)]" />
