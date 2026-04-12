@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { eq, inArray } from "drizzle-orm";
+import { eq, ilike, inArray } from "drizzle-orm";
 import { db } from "../db.js";
 import { sessions, users } from "./schema/schema.users.js";
 
@@ -83,6 +83,13 @@ export async function deleteUsersByEmails(emails: string[]) {
   if (emails.length === 0) return;
 
   await db.delete(users).where(inArray(users.email, emails.map(normalizeEmail)));
+}
+
+// Deletes every user whose email ends with the given domain suffix.
+// Used by the test suite to wipe all test-created rows (cascades to sessions,
+// friends, friend_requests, notices via FK ON DELETE CASCADE).
+export async function deleteUsersByEmailDomain(domain: string) {
+  await db.delete(users).where(ilike(users.email, `%@${domain}`));
 }
 
 export async function updateUserProfile(

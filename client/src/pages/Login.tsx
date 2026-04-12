@@ -18,11 +18,44 @@ type AuthSuccessResponse = {
 };
 
 type AuthFailureResponse = {
-  error?: {
-    details?: string;
-    code?: string;
-  };
+  error?: { details?: string; code?: string } | string;
+  message?: string;
 };
+
+const ERROR_MESSAGES: Record<string, string> = {
+  INVALID_CREDENTIALS: "Incorrect email or password.",
+  DB_CALL_FAILED: "Server error. Please try again in a moment.",
+};
+
+function parseServerError(err: unknown, fallback: string): string {
+  const axiosError = err as AxiosError<AuthFailureResponse>;
+  const data = axiosError.response?.data;
+  const status = axiosError.response?.status;
+
+  if (!data) {
+    return axiosError.request
+      ? "Could not reach the server. Check your connection."
+      : fallback;
+  }
+
+  if (status === 429) {
+    return "Too many attempts. Please wait a moment and try again.";
+  }
+
+  if (data.error && typeof data.error === "object") {
+    const code = data.error.code ?? "";
+    return ERROR_MESSAGES[code] ?? data.error.details ?? fallback;
+  }
+
+  if (data.message) {
+    const msg = data.message.toLowerCase();
+    if (msg.includes("password")) return "Password must be at least 6 characters.";
+    if (msg.includes("email")) return "Please enter a valid email address.";
+    return "Please check your input and try again.";
+  }
+
+  return fallback;
+}
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -47,6 +80,16 @@ export default function Login() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (!email.trim()) {
+      setError("Email is required.");
+      return;
+    }
+    if (!password) {
+      setError("Password is required.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -63,13 +106,7 @@ export default function Login() {
 
       navigate(redirectTarget, { replace: true });
     } catch (err) {
-      const error = err as AxiosError<AuthFailureResponse>;
-
-      setError(
-        error.response?.data?.error?.details ||
-          error.response?.data?.error?.code ||
-          "Login failed",
-      );
+      setError(parseServerError(err, "Login failed. Please try again."));
     } finally {
       setLoading(false);
     }

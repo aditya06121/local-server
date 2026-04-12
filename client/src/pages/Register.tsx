@@ -18,11 +18,47 @@ type AuthSuccessResponse = {
 };
 
 type AuthFailureResponse = {
-  error?: {
-    details?: string;
-    code?: string;
-  };
+  error?: { details?: string; code?: string } | string;
+  message?: string;
 };
+
+const ERROR_MESSAGES: Record<string, string> = {
+  EMAIL_EXISTS: "An account with that email already exists.",
+  DB_CALL_FAILED: "Server error. Please try again in a moment.",
+};
+
+function parseServerError(err: unknown, fallback: string): string {
+  const axiosError = err as AxiosError<AuthFailureResponse>;
+  const data = axiosError.response?.data;
+  const status = axiosError.response?.status;
+
+  if (!data) {
+    return axiosError.request
+      ? "Could not reach the server. Check your connection."
+      : fallback;
+  }
+
+  if (status === 429) {
+    return "Too many attempts. Please wait a moment and try again.";
+  }
+
+  // App error format: { error: { code, details } }
+  if (data.error && typeof data.error === "object") {
+    const code = data.error.code ?? "";
+    return ERROR_MESSAGES[code] ?? data.error.details ?? fallback;
+  }
+
+  // Fastify validation format: { error: "Bad Request", message: "body/password ..." }
+  if (data.message) {
+    const msg = data.message.toLowerCase();
+    if (msg.includes("password")) return "Password must be at least 6 characters.";
+    if (msg.includes("email")) return "Please enter a valid email address.";
+    if (msg.includes("name")) return "Name is required.";
+    return "Please check your input and try again.";
+  }
+
+  return fallback;
+}
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -44,11 +80,25 @@ export default function Register() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    if (!name.trim()) {
+      setError("Name is required.");
+      return;
+    }
+    if (!email.trim()) {
+      setError("Email is required.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters.");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const res = await api.post<AuthSuccessResponse>("/auth/register", {
-        name,
+        name: name.trim(),
         email,
         password,
       });
@@ -61,13 +111,7 @@ export default function Register() {
 
       navigate("/", { replace: true });
     } catch (err) {
-      const error = err as AxiosError<AuthFailureResponse>;
-
-      setError(
-        error.response?.data?.error?.details ||
-          error.response?.data?.error?.code ||
-          "Registration failed",
-      );
+      setError(parseServerError(err, "Registration failed. Please try again."));
     } finally {
       setLoading(false);
     }
@@ -108,7 +152,7 @@ export default function Register() {
             type="password"
             fullWidth
             autoComplete="new-password"
-            helperText="Use at least 6 characters."
+            helperText="At least 6 characters."
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />

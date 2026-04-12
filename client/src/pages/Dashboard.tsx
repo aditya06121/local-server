@@ -1,6 +1,6 @@
 import { useDeferredValue, useEffect, useRef, useState, type ReactNode } from "react";
 import type { AxiosError } from "axios";
-import { Alert, Box, Button, CircularProgress, Paper, Stack, TextField, Typography } from "@mui/material";
+import { Alert, Box, Button, CircularProgress, Collapse, IconButton, Paper, Stack, TextField, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
@@ -167,11 +167,13 @@ function Noticeboard({ currentUserId }: { currentUserId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
+  const [isComposing, setIsComposing] = useState(false);
   const [content, setContent] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const deletingRef = useRef<Set<string>>(new Set());
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const textFieldRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -196,6 +198,17 @@ function Noticeboard({ currentUserId }: { currentUserId: string }) {
     return () => { isActive = false; };
   }, []);
 
+  function openCompose() {
+    setIsComposing(true);
+    // Focus the textarea after the Collapse animation finishes.
+    setTimeout(() => textFieldRef.current?.focus(), 150);
+  }
+
+  function closeCompose() {
+    setIsComposing(false);
+    setContent("");
+  }
+
   async function handlePost() {
     const trimmed = content.trim();
     if (!trimmed) return;
@@ -208,6 +221,7 @@ function Noticeboard({ currentUserId }: { currentUserId: string }) {
       const res = await api.post<PostNoticeResponse>("/notices", { content: trimmed });
       setNotices((prev) => [res.data.data.notice, ...prev]);
       setContent("");
+      setIsComposing(false);
       setNotice("Notice posted.");
     } catch {
       setError("Could not post your notice.");
@@ -253,56 +267,95 @@ function Noticeboard({ currentUserId }: { currentUserId: string }) {
 
   return (
     <Paper elevation={0} className="rounded-lg p-5 sm:p-6">
-      <Stack spacing={2.5}>
-        <Box>
-          <Typography variant="h6">Noticeboard</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-            Post a short message for everyone to see.
-          </Typography>
-        </Box>
+      <Stack spacing={2}>
+        {/* Header row */}
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+          <Box>
+            <Typography variant="h6">Noticeboard</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
+              Short messages visible to everyone.
+            </Typography>
+          </Box>
+          <IconButton
+            onClick={isComposing ? closeCompose : openCompose}
+            size="small"
+            sx={{
+              width: 32,
+              height: 32,
+              border: "1px solid",
+              borderColor: isComposing ? "secondary.main" : "divider",
+              bgcolor: isComposing ? "rgba(180,107,77,0.06)" : "background.paper",
+              color: isComposing ? "secondary.main" : "text.secondary",
+              fontSize: 18,
+              fontWeight: 700,
+              lineHeight: 1,
+              transition: "transform 0.2s, border-color 0.2s, background-color 0.2s",
+              transform: isComposing ? "rotate(45deg)" : "rotate(0deg)",
+              flexShrink: 0,
+              mt: 0.25,
+            }}
+            aria-label={isComposing ? "Cancel" : "Write a notice"}
+          >
+            +
+          </IconButton>
+        </Stack>
 
         {error && <Alert severity="error" onClose={() => setError("")}>{error}</Alert>}
         {notice && <Alert severity="success" onClose={() => setNotice("")}>{notice}</Alert>}
 
-        <Box
-          sx={{
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 2,
-            p: 2,
-            bgcolor: "rgba(255,255,255,0.7)",
-          }}
-        >
-          <Stack spacing={1.5}>
-            <TextField
-              multiline
-              minRows={2}
-              maxRows={5}
-              placeholder="Write a notice..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              inputProps={{ maxLength: MAX_CONTENT_LENGTH }}
-              fullWidth
-              size="small"
-            />
-            <Stack direction="row" justifyContent="space-between" alignItems="center">
-              <Typography
-                variant="caption"
-                color={remaining < 50 ? "error" : "text.secondary"}
-              >
-                {remaining} characters remaining
-              </Typography>
-              <Button
-                variant="contained"
+        {/* Collapsible compose form */}
+        <Collapse in={isComposing} unmountOnExit>
+          <Box
+            sx={{
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 2,
+              p: 2,
+              bgcolor: "rgba(255,255,255,0.7)",
+            }}
+          >
+            <Stack spacing={1.5}>
+              <TextField
+                inputRef={textFieldRef}
+                multiline
+                minRows={3}
+                maxRows={6}
+                placeholder="What's on your mind?"
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                inputProps={{ maxLength: MAX_CONTENT_LENGTH }}
+                fullWidth
                 size="small"
-                onClick={handlePost}
-                disabled={isPosting || !content.trim()}
-              >
-                {isPosting ? "Posting..." : "Post"}
-              </Button>
+              />
+              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Typography
+                  variant="caption"
+                  color={remaining < 50 ? "error" : "text.secondary"}
+                >
+                  {remaining} left
+                </Typography>
+                <Stack direction="row" spacing={1}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={closeCompose}
+                    disabled={isPosting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={handlePost}
+                    disabled={isPosting || !content.trim()}
+                  >
+                    {isPosting ? "Posting..." : "Post"}
+                  </Button>
+                </Stack>
+              </Stack>
             </Stack>
-          </Stack>
-        </Box>
+          </Box>
+        </Collapse>
 
         {isLoading ? (
           <Stack spacing={1.25} alignItems="center" justifyContent="center" sx={{ minHeight: 120 }}>
