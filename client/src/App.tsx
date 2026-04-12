@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate, Link } from "react-router-dom";
 import ProfileDrawer from "./components/ProfileDrawer";
 import { useAuth } from "./context/AuthContext";
 
@@ -118,6 +118,21 @@ export default function App() {
                     </Typography>
                   </Box>
                 </Stack>
+              </Button>
+
+              <Button
+                component={Link}
+                to="/term"
+                variant="outlined"
+                sx={{
+                  px: 1.75,
+                  py: 0.8,
+                  minHeight: 0,
+                  minWidth: 0,
+                  borderRadius: 2,
+                }}
+              >
+                Terminal
               </Button>
 
               <Button

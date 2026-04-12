@@ -16,6 +16,7 @@ import Logout from "./pages/Logout.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import PublicProfile from "./pages/PublicProfile.tsx";
 import Register from "./pages/Register.tsx";
+import Terminal from "./pages/Terminal.tsx";
 import theme from "./theme.ts";
 
 const router = createBrowserRouter([
@@ -33,6 +34,10 @@ const router = createBrowserRouter([
           {
             path: "profiles/:userId",
             element: <PublicProfile />,
+          },
+          {
+            path: "term",
+            element: <Terminal />,
           },
         ],
       },
