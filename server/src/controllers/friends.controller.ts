@@ -5,6 +5,7 @@ import {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
+  cancelFriendRequest,
   removeFriend,
   getMyFriends,
   getMyPendingRequests,
@@ -85,6 +86,26 @@ export async function rejectRequestHandler(
     await rejectFriendRequest(requestId, userId);
 
     return res.send(success("REQUEST_REJECTED", {}));
+  } catch (err) {
+    return handleError(res, err);
+  }
+}
+
+export async function cancelRequestHandler(
+  req: FastifyRequest,
+  res: FastifyReply,
+) {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).send(failure("UNAUTHORIZED", "Missing user"));
+    }
+
+    const { requestId } = req.params as { requestId: string };
+
+    await cancelFriendRequest(requestId, userId);
+
+    return res.send(success("REQUEST_CANCELLED", {}));
   } catch (err) {
     return handleError(res, err);
   }

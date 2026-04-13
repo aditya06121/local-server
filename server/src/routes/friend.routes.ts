@@ -6,6 +6,7 @@ import {
   sendRequestHandler,
   acceptRequestHandler,
   rejectRequestHandler,
+  cancelRequestHandler,
   removeFriendHandler,
   getFriendsHandler,
   getPendingRequestsHandler,
@@ -16,6 +17,7 @@ import {
   sendRequestSchema,
   acceptRequestSchema,
   rejectRequestSchema,
+  cancelRequestSchema,
   getFriendsSchema,
   getRequestsSchema,
   removeFriendSchema,
@@ -56,6 +58,16 @@ export default async function friendsRoutes(app: FastifyInstance) {
       config: { rateLimit: friendsRateLimit },
     },
     rejectRequestHandler,
+  );
+
+  app.delete(
+    "/request/:requestId",
+    {
+      preHandler: authMiddleware,
+      schema: cancelRequestSchema,
+      config: { rateLimit: friendsRateLimit },
+    },
+    cancelRequestHandler,
   );
 
   app.get(

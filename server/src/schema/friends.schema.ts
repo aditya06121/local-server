@@ -110,6 +110,27 @@ export const acceptRequestSchema = {
 
 export const rejectRequestSchema = acceptRequestSchema;
 
+export const cancelRequestSchema = {
+  params: {
+    type: "object",
+    required: ["requestId"],
+    properties: {
+      requestId: { type: "string" },
+    },
+  },
+  response: {
+    200: createApiSuccessSchema({
+      type: "object",
+      additionalProperties: false,
+    }),
+    400: failureSchema,
+    401: failureSchema,
+    404: failureSchema,
+    429: failureSchema,
+    500: failureSchema,
+  },
+};
+
 export const getFriendsSchema = {
   response: {
     200: createApiSuccessSchema({

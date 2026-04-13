@@ -2,6 +2,7 @@ import { db } from "../db.js";
 import {
   createFriendRequest,
   createFriendship,
+  deleteFriendRequest,
   deleteFriendship,
   findFriendRequestById,
   findFriendRequestBetweenUsers,
@@ -128,6 +129,26 @@ export async function rejectFriendRequest(requestId: string, userId: string) {
     }
 
     await updateFriendRequestStatus(tx, requestId, "rejected");
+  });
+}
+
+export async function cancelFriendRequest(requestId: string, userId: string) {
+  await db.transaction(async (tx) => {
+    const request = await findFriendRequestById(requestId, tx);
+
+    if (!request) {
+      throw new Error("REQUEST_NOT_FOUND");
+    }
+
+    if (request.fromUserId !== userId) {
+      throw new Error("UNAUTHORIZED");
+    }
+
+    if (request.status !== "pending") {
+      throw new Error("INVALID_REQUEST_STATE");
+    }
+
+    await deleteFriendRequest(tx, requestId);
   });
 }
 

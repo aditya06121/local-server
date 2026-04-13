@@ -585,7 +585,48 @@ describe("/friends", { timeout: 30000 }, () => {
     });
   });
 
-  it("filters search results to exclude self, friends, and pending requests", async () => {
+  it("sender can cancel a pending friend request", async () => {
+    const sender = await registerUser("cancel-sender");
+    const receiver = await registerUser("cancel-receiver");
+
+    const sendRes = await sendRequest(sender.accessToken, receiver.payload.email);
+    expect(sendRes.statusCode).toBe(200);
+
+    const request = await findFriendRequestBetweenUsers(sender.user.id, receiver.user.id);
+    expect(request).not.toBeNull();
+
+    const cancelRes = await app.inject({
+      method: "DELETE",
+      url: `/friends/request/${request!.id}`,
+      remoteAddress: nextRemoteAddress(),
+      cookies: { accessToken: sender.accessToken },
+    });
+    expect(cancelRes.statusCode).toBe(200);
+    expect(cancelRes.json()).toMatchObject({ success: true, message: "REQUEST_CANCELLED" });
+
+    const afterCancel = await findFriendRequestById(request!.id);
+    expect(afterCancel).toBeNull();
+  });
+
+  it("receiver cannot cancel someone else's request", async () => {
+    const sender = await registerUser("cancel-sender2");
+    const receiver = await registerUser("cancel-receiver2");
+
+    const sendRes = await sendRequest(sender.accessToken, receiver.payload.email);
+    expect(sendRes.statusCode).toBe(200);
+
+    const request = await findFriendRequestBetweenUsers(sender.user.id, receiver.user.id);
+
+    const cancelRes = await app.inject({
+      method: "DELETE",
+      url: `/friends/request/${request!.id}`,
+      remoteAddress: nextRemoteAddress(),
+      cookies: { accessToken: receiver.accessToken },
+    });
+    expect(cancelRes.statusCode).toBe(401);
+  });
+
+  it("filters search results to exclude self and pending requests (friends are included)", async () => {
     const currentUser = await registerUser("searchable-self");
     const friend = await registerUser("searchable-friend");
     const outgoingPending = await registerUser("searchable-outgoing");
@@ -655,20 +696,14 @@ describe("/friends", { timeout: 30000 }, () => {
     };
 
     expect(response.statusCode).toBe(200);
-    expect(body).toMatchObject({
-      success: true,
-      message: "SEARCH_RESULTS",
-      data: {
-        users: [
-          {
-            id: candidate.user.id,
-            name: candidate.payload.name,
-            email: candidate.payload.email,
-          },
-        ],
-      },
-    });
-    expect(body.data.users).toHaveLength(1);
+
+    const userIds = body.data.users.map((u) => u.id);
+    expect(userIds).toContain(candidate.user.id);
+    expect(userIds).toContain(friend.user.id);
+    expect(userIds).not.toContain(currentUser.user.id);
+    expect(userIds).not.toContain(outgoingPending.user.id);
+    expect(userIds).not.toContain(incomingPending.user.id);
+    expect(body.data.users).toHaveLength(2);
     expect(body.data.users[0]?.phone).toBeUndefined();
   });
 });

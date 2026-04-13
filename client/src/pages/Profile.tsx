@@ -287,6 +287,21 @@ export default function Profile() {
     }
   }
 
+  async function handleCancelRequest(requestId: string) {
+    setBusyAction(`cancel:${requestId}`);
+    setSectionError("");
+    setSectionNotice("");
+    try {
+      await api.delete(`/friends/request/${requestId}`);
+      await refreshWorkspaceSections();
+      setSectionNotice("Friend request cancelled.");
+    } catch (error) {
+      setSectionError(getErrorMessage(error, "Could not cancel the request."));
+    } finally {
+      setBusyAction("");
+    }
+  }
+
   async function handleRemoveFriend(friendId: string) {
     setBusyAction(`remove:${friendId}`);
     setSectionError("");
@@ -444,18 +459,35 @@ export default function Profile() {
                               </Typography>
                             </Box>
                             <Box>
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => handleSendRequest(result.email)}
-                                disabled={
-                                  busyAction === `send:${result.email}`
-                                }
-                              >
-                                {busyAction === `send:${result.email}`
-                                  ? "Sending..."
-                                  : "Add friend"}
-                              </Button>
+                              {friends.some((f) => f.id === result.id) ? (
+                                <Typography
+                                  variant="caption"
+                                  sx={{
+                                    px: 0.75,
+                                    py: 0.25,
+                                    borderRadius: 1,
+                                    bgcolor: (theme) =>
+                                      alpha(theme.palette.primary.main, 0.08),
+                                    color: "primary.main",
+                                    fontWeight: 700,
+                                    lineHeight: 1.6,
+                                    display: "inline-block",
+                                  }}
+                                >
+                                  Already friends
+                                </Typography>
+                              ) : (
+                                <Button
+                                  variant="contained"
+                                  size="small"
+                                  onClick={() => handleSendRequest(result.email)}
+                                  disabled={busyAction === `send:${result.email}`}
+                                >
+                                  {busyAction === `send:${result.email}`
+                                    ? "Sending..."
+                                    : "Add friend"}
+                                </Button>
+                              )}
                             </Box>
                           </Stack>
                         </Box>
@@ -584,13 +616,30 @@ export default function Profile() {
                               </Button>
                             </Stack>
                           ) : (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                              sx={{ display: "block", mt: 1 }}
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                              sx={{ mt: 1 }}
                             >
-                              Awaiting their response.
-                            </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                Awaiting their response.
+                              </Typography>
+                              <Button
+                                variant="outlined"
+                                color="secondary"
+                                size="small"
+                                onClick={() => handleCancelRequest(request.id)}
+                                disabled={busyAction === `cancel:${request.id}`}
+                              >
+                                {busyAction === `cancel:${request.id}`
+                                  ? "Cancelling..."
+                                  : "Cancel"}
+                              </Button>
+                            </Stack>
                           )}
                         </Box>
                       ))}

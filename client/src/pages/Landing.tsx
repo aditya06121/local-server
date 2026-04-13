@@ -5,7 +5,6 @@ import {
   Button,
   Container,
   IconButton,
-  Paper,
   Stack,
   Toolbar,
   Typography,
@@ -183,41 +182,6 @@ export default function Landing() {
         <Stack spacing={3}>
           <Noticeboard currentUserId={user?.id ?? null} />
 
-          {user && (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <Paper
-                elevation={0}
-                component={RouterLink}
-                to="/profile"
-                sx={{
-                  p: 3,
-                  textDecoration: "none",
-                  display: "block",
-                  transition: "border-color 0.15s",
-                  "&:hover": { borderColor: "primary.main" },
-                }}
-              >
-                <Typography
-                  variant="overline"
-                  color="primary"
-                  sx={{ fontWeight: 700 }}
-                >
-                  Profile
-                </Typography>
-                <Typography variant="h6" sx={{ mt: 0.5 }}>
-                  Your profile
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mt: 1 }}
-                >
-                  Manage friends, edit your bio, and see your connections.
-                </Typography>
-              </Paper>
-
-                </div>
-          )}
         </Stack>
       </Container>
 

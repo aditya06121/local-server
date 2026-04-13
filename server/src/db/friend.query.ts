@@ -40,21 +40,6 @@ export async function searchUsersByEmailFiltered(
         // exclude self
         not(eq(users.id, currentUserId)),
 
-        // exclude existing friends
-        not(
-          exists(
-            db
-              .select()
-              .from(friends)
-              .where(
-                and(
-                  eq(friends.userId, currentUserId),
-                  eq(friends.friendId, users.id),
-                ),
-              ),
-          ),
-        ),
-
         // exclude pending requests (either direction)
         not(
           exists(
