@@ -1,35 +1,27 @@
 import { useState } from "react";
 import {
   AppBar,
-  Avatar,
   Box,
   Button,
   Container,
+  IconButton,
   Stack,
   Toolbar,
   Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
+import SettingsIcon from "@mui/icons-material/Settings";
+import Brightness4Icon from "@mui/icons-material/Brightness4";
+import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { Outlet, useNavigate } from "react-router-dom";
 import ProfileDrawer from "./components/ProfileDrawer";
 import { useAuth } from "./context/AuthContext";
-
-function getInitials(name?: string) {
-  if (!name) {
-    return "MP";
-  }
-
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
+import { useThemeMode } from "./context/ThemeContext";
 
 export default function App() {
   const navigate = useNavigate();
   const { user, setAuthenticatedUser } = useAuth();
+  const { mode, toggleMode } = useThemeMode();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
 
@@ -48,7 +40,8 @@ export default function App() {
         position="sticky"
         color="transparent"
         sx={{
-          backgroundColor: alpha("#ffffff", 0.95),
+          backgroundColor: (theme) =>
+            alpha(theme.palette.background.paper, 0.95),
           borderBottom: "1px solid",
           borderColor: "divider",
           backdropFilter: "blur(10px)",
@@ -82,42 +75,53 @@ export default function App() {
             <Stack
               direction="row"
               spacing={1}
-              sx={{
-                width: "auto",
-                flexShrink: 0,
-              }}
+              alignItems="center"
+              sx={{ width: "auto", flexShrink: 0 }}
             >
+              <IconButton
+                onClick={toggleMode}
+                size="small"
+                sx={{
+                  width: 36,
+                  height: 36,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  color: "text.secondary",
+                }}
+                aria-label="Toggle dark mode"
+              >
+                {mode === "dark" ? (
+                  <Brightness7Icon fontSize="small" />
+                ) : (
+                  <Brightness4Icon fontSize="small" />
+                )}
+              </IconButton>
+
               <Button
                 variant="outlined"
                 onClick={() => setIsProfileOpen(true)}
                 sx={{
                   justifyContent: "flex-start",
-                  px: 1,
+                  px: 1.25,
                   py: 0.75,
                   minWidth: 0,
                   minHeight: 0,
                   borderRadius: 2,
+                  gap: 1,
                 }}
               >
-                <Stack direction="row" spacing={1.25} alignItems="center">
-                  <Avatar
-                    sx={{
-                      width: 28,
-                      height: 28,
-                      bgcolor: alpha("#1f4d46", 0.1),
-                      color: "primary.main",
-                      fontSize: 12,
-                      fontWeight: 800,
-                    }}
-                  >
-                    {getInitials(user.displayName)}
-                  </Avatar>
-                  <Box sx={{ textAlign: "left", display: { xs: "none", sm: "block" } }}>
-                    <Typography variant="body2" fontWeight={700} sx={{ lineHeight: 1.1 }}>
-                      Profile
-                    </Typography>
-                  </Box>
-                </Stack>
+                <SettingsIcon
+                  sx={{ fontSize: 18, color: "primary.main", flexShrink: 0 }}
+                />
+                <Box
+                  sx={{
+                    display: { xs: "none", sm: "block" },
+                    fontWeight: 700,
+                    fontSize: "0.875rem",
+                  }}
+                >
+                  Settings
+                </Box>
               </Button>
 
               <Button

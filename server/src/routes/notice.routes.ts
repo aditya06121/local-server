@@ -35,7 +35,6 @@ export default async function noticeRoutes(app: FastifyInstance) {
   app.get(
     "/",
     {
-      preHandler: authMiddleware,
       schema: getNoticesSchema,
       config: { rateLimit: noticesRateLimit },
     },

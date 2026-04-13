@@ -1,6 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { CssBaseline, ThemeProvider } from "@mui/material";
+import { CssBaseline } from "@mui/material";
 import {
   createBrowserRouter,
   Navigate,
@@ -10,42 +10,40 @@ import "./index.css";
 import App from "./App.tsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { AuthProvider } from "./context/AuthContext";
-import Dashboard from "./pages/Dashboard.tsx";
+import { AppThemeProvider } from "./context/ThemeContext";
+import Landing from "./pages/Landing.tsx";
 import Login from "./pages/Login.tsx";
 import Logout from "./pages/Logout.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Profile from "./pages/Profile.tsx";
 import PublicProfile from "./pages/PublicProfile.tsx";
 import Register from "./pages/Register.tsx";
 import Terminal from "./pages/Terminal.tsx";
-import theme from "./theme.ts";
 
 const router = createBrowserRouter([
+  // Public landing page
+  {
+    path: "/",
+    element: <Landing />,
+  },
+  // Authenticated pages — share the App navbar layout, paths are absolute
   {
     element: <ProtectedRoute />,
     children: [
       {
-        path: "/",
         element: <App />,
         children: [
-          {
-            index: true,
-            element: <Dashboard />,
-          },
-          {
-            path: "profiles/:userId",
-            element: <PublicProfile />,
-          },
-          {
-            path: "term",
-            element: <Terminal />,
-          },
+          { path: "/profile", element: <Profile /> },
+          { path: "/profiles/:userId", element: <PublicProfile /> },
+          { path: "/term", element: <Terminal /> },
         ],
       },
-      {
-        path: "/dashboard",
-        element: <Navigate to="/" replace />,
-      },
     ],
+  },
+  // Legacy / convenience redirects
+  {
+    path: "/dashboard",
+    element: <Navigate to="/profile" replace />,
   },
   {
     path: "/login",
@@ -67,11 +65,11 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider theme={theme}>
+    <AppThemeProvider>
       <CssBaseline />
       <AuthProvider>
         <RouterProvider router={router} />
       </AuthProvider>
-    </ThemeProvider>
+    </AppThemeProvider>
   </StrictMode>,
 );

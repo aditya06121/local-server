@@ -27,8 +27,8 @@ const NotFound: React.FC = () => {
           </Box>
           <Typography variant="h3">Page not found</Typography>
           <Typography variant="body1" color="text.secondary" sx={{ maxWidth: 420 }}>
-            The address you opened does not match an active route. Head back to
-            the dashboard or return to the previous page.
+            The address you opened does not match an active route. Head back
+            home or return to the previous page.
           </Typography>
           <Box
             sx={{
@@ -40,7 +40,7 @@ const NotFound: React.FC = () => {
             }}
           >
             <Button variant="contained" onClick={() => navigate("/")}>
-              Open Dashboard
+              Go Home
             </Button>
 
             <Button variant="outlined" onClick={() => navigate(-1)}>
