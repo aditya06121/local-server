@@ -291,27 +291,12 @@ export default function Landing() {
 
       <Container maxWidth="lg" sx={{ py: { xs: 3, md: 4 } }}>
         <Stack spacing={3}>
-          <Box>
-            <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5, mb: 1.5 }}>
-              <Typography
-                component={RouterLink}
-                to="/notices"
-                variant="h6"
-                sx={{ textDecoration: "none", color: "text.primary", "&:hover": { textDecoration: "underline" } }}
-              >
-                Notice Board
-              </Typography>
-              <Typography variant="body2" component={RouterLink} to="/notices" sx={{ color: "text.secondary", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}>
-                View all →
-              </Typography>
-            </Box>
-            <Noticeboard currentUserId={user?.id ?? null} />
-          </Box>
+          <Noticeboard currentUserId={user?.id ?? null} />
 
           {user && (
             <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, p: { xs: 2.5, sm: 3 }, bgcolor: "background.paper" }}>
               <Stack spacing={2.5}>
-                <Box sx={{ display: "flex", alignItems: "baseline", gap: 1.5 }}>
+                <Box>
                   <Typography
                     component={RouterLink}
                     to="/friends"
@@ -320,13 +305,7 @@ export default function Landing() {
                   >
                     Friends
                   </Typography>
-                  <Typography variant="body2" component={RouterLink} to="/friends" sx={{ color: "text.secondary", textDecoration: "none", "&:hover": { textDecoration: "underline" } }}>
-                    View all →
-                  </Typography>
                 </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: "-12px !important" }}>
-                    Search by email, manage requests, and keep track of your network.
-                  </Typography>
 
                 {sectionError && <Alert severity="error" onClose={() => setSectionError("")}>{sectionError}</Alert>}
                 {sectionNotice && <Alert severity="success" onClose={() => setSectionNotice("")}>{sectionNotice}</Alert>}

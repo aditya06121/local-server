@@ -41,7 +41,7 @@ function formatRelativeTime(iso: string): string {
 export default function PublicProfile() {
   const { userId } = useParams();
   const { mode, toggleMode } = useThemeMode();
-  const { user: authUser } = useAuth();
+  const { user: authUser, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -243,20 +243,20 @@ export default function PublicProfile() {
                 {/* Friend action */}
                 {friendActionError && <Alert severity="error" onClose={() => setFriendActionError("")}>{friendActionError}</Alert>}
 
-                {!authUser && (
+                {!isAuthLoading && !authUser && (
                   <Button
                     variant="outlined"
                     size="small"
                     sx={{ alignSelf: "flex-start" }}
                     onClick={() => navigate("/login", { state: { from: location } })}
                   >
-                    Sign in to add friend
+                    Sign in to send friend request
                   </Button>
                 )}
 
                 {authUser && relationship === "none" && (
                   <Button variant="contained" size="small" disabled={friendActionBusy} sx={{ alignSelf: "flex-start" }} onClick={handleSendRequest}>
-                    {friendActionBusy ? "Sending..." : "Add friend"}
+                    {friendActionBusy ? "Sending..." : "Send friend request"}
                   </Button>
                 )}
 

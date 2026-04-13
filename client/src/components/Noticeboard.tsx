@@ -181,9 +181,13 @@ export default function Noticeboard({
           alignItems="flex-start"
         >
           <Box>
-            <Typography variant="h6">Noticeboard</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.75 }}>
-              Short messages visible to everyone.
+            <Typography
+              component={RouterLink}
+              to="/notices"
+              variant="h6"
+              sx={{ textDecoration: "none", color: "text.primary", "&:hover": { textDecoration: "underline" } }}
+            >
+              Noticeboard
             </Typography>
           </Box>
           <IconButton
