@@ -69,7 +69,7 @@ export default function Login() {
     useAuth();
   const redirectTarget =
     (location.state as { from?: { pathname?: string } } | null)?.from?.pathname ??
-    "/profile";
+    "/";
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {

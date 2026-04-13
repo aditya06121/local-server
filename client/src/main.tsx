@@ -13,18 +13,22 @@ import { AuthProvider } from "./context/AuthContext";
 import { AppThemeProvider } from "./context/ThemeContext";
 import Landing from "./pages/Landing.tsx";
 import Login from "./pages/Login.tsx";
+import Notices from "./pages/Notices.tsx";
 import Logout from "./pages/Logout.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Profile from "./pages/Profile.tsx";
 import PublicProfile from "./pages/PublicProfile.tsx";
 import Register from "./pages/Register.tsx";
-import Terminal from "./pages/Terminal.tsx";
 
 const router = createBrowserRouter([
   // Public landing page
   {
     path: "/",
     element: <Landing />,
+  },
+  {
+    path: "/notices",
+    element: <Notices />,
   },
   // Authenticated pages — share the App navbar layout, paths are absolute
   {
@@ -35,7 +39,6 @@ const router = createBrowserRouter([
         children: [
           { path: "/profile", element: <Profile /> },
           { path: "/profiles/:userId", element: <PublicProfile /> },
-          { path: "/term", element: <Terminal /> },
         ],
       },
     ],

@@ -15,14 +15,14 @@ export function createAppTheme(mode: "light" | "dark") {
         main: "#b46b4d",
       },
       background: {
-        default: isDark ? "#0d1f1c" : "#f9fafb",
-        paper: isDark ? "#162621" : "#ffffff",
+        default: isDark ? "#0c0c0c" : "#f9fafb",
+        paper: isDark ? "#161616" : "#ffffff",
       },
       text: {
         primary: isDark ? "#f3f4f6" : "#111827",
         secondary: isDark ? "#9ca3af" : "#6b7280",
       },
-      divider: isDark ? "rgba(55, 65, 81, 1)" : "rgba(229, 231, 235, 1)",
+      divider: isDark ? "rgba(40, 40, 40, 1)" : "rgba(229, 231, 235, 1)",
     },
     shape: {
       borderRadius: 4,
@@ -85,7 +85,7 @@ export function createAppTheme(mode: "light" | "dark") {
           root: {
             borderRadius: 6,
             backgroundColor: isDark
-              ? alpha("#162621", 0.8)
+              ? alpha("#161616", 0.8)
               : alpha("#ffffff", 0.8),
           },
         },

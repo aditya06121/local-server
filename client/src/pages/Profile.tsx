@@ -330,7 +330,7 @@ export default function Profile() {
       <Paper
         elevation={0}
         component={RouterLink}
-        to="/"
+        to="/notices"
         sx={{
           p: { xs: 2.5, sm: 3 },
           textDecoration: "none",

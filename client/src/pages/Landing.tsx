@@ -216,37 +216,7 @@ export default function Landing() {
                 </Typography>
               </Paper>
 
-              <Paper
-                elevation={0}
-                component={RouterLink}
-                to="/term"
-                sx={{
-                  p: 3,
-                  textDecoration: "none",
-                  display: "block",
-                  transition: "border-color 0.15s",
-                  "&:hover": { borderColor: "secondary.main" },
-                }}
-              >
-                <Typography
-                  variant="overline"
-                  color="secondary"
-                  sx={{ fontWeight: 700 }}
-                >
-                  Terminal
-                </Typography>
-                <Typography variant="h6" sx={{ mt: 0.5 }}>
-                  SSH Terminal
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mt: 1 }}
-                >
-                  Open a browser-based SSH terminal session.
-                </Typography>
-              </Paper>
-            </div>
+                </div>
           )}
         </Stack>
       </Container>

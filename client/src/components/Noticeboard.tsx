@@ -100,7 +100,7 @@ export default function Noticeboard({
 
   function handleComposeClick() {
     if (!currentUserId) {
-      navigate("/login", { state: { from: { pathname: "/" } } });
+      navigate("/login", { state: { from: { pathname: "/notices" } } });
       return;
     }
     setIsComposing(true);
