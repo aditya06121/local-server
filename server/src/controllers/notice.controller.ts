@@ -21,11 +21,6 @@ export async function postNoticeHandler(req: FastifyRequest, res: FastifyReply) 
 
 export async function getNoticesHandler(req: FastifyRequest, res: FastifyReply) {
   try {
-    const userId = req.user?.userId;
-    if (!userId) {
-      return res.status(401).send(failure("UNAUTHORIZED", "Missing user"));
-    }
-
     const { cursor, limit } = req.query as { cursor?: string; limit?: number };
 
     const result = await listNotices(cursor, limit);

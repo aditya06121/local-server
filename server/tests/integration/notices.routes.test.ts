@@ -87,7 +87,7 @@ async function postNotice(accessToken: string, content: string) {
   });
 }
 
-async function getNotices(accessToken: string, cursor?: string, limit?: number) {
+async function getNotices(cursor?: string, limit?: number) {
   const query = new URLSearchParams();
   if (cursor) query.set("cursor", cursor);
   if (limit !== undefined) query.set("limit", String(limit));
@@ -97,7 +97,6 @@ async function getNotices(accessToken: string, cursor?: string, limit?: number) 
     method: "GET",
     url: `/notices${qs ? `?${qs}` : ""}`,
     remoteAddress: nextRemoteAddress(),
-    cookies: { accessToken },
   });
 }
 
@@ -202,7 +201,7 @@ describe("/notices", () => {
     await postNotice(userA.accessToken, "first notice");
     await postNotice(userB.accessToken, "second notice");
 
-    const response = await getNotices(userA.accessToken);
+    const response = await getNotices();
 
     expect(response.statusCode).toBe(200);
 
@@ -242,14 +241,14 @@ describe("/notices", () => {
     await postNotice(user.accessToken, "notice two");
     await postNotice(user.accessToken, "notice three");
 
-    const page1 = await getNotices(user.accessToken, undefined, 2);
+    const page1 = await getNotices(undefined, 2);
     expect(page1.statusCode).toBe(200);
 
     const page1Body = page1.json().data;
     expect(page1Body.notices).toHaveLength(2);
     expect(page1Body.nextCursor).not.toBeNull();
 
-    const page2 = await getNotices(user.accessToken, page1Body.nextCursor, 2);
+    const page2 = await getNotices(page1Body.nextCursor, 2);
     expect(page2.statusCode).toBe(200);
 
     const page2Body = page2.json().data;
@@ -262,14 +261,10 @@ describe("/notices", () => {
     }
   });
 
-  it("requires authentication to list", async () => {
-    const response = await app.inject({
-      method: "GET",
-      url: "/notices",
-      remoteAddress: nextRemoteAddress(),
-    });
+  it("allows unauthenticated access to list", async () => {
+    const response = await getNotices();
 
-    expect(response.statusCode).toBe(401);
+    expect(response.statusCode).toBe(200);
   });
 
   it("owner can delete their own notice", async () => {
