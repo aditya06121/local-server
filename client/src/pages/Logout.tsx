@@ -20,7 +20,7 @@ export default function Logout() {
 
       setIsDone(true);
       timeoutId = window.setTimeout(() => {
-        navigate("/login", { replace: true });
+        navigate("/", { replace: true });
       }, 1100);
     }
 
@@ -75,7 +75,7 @@ export default function Logout() {
           variant="outlined"
           fullWidth
           className="rounded-xl normal-case"
-          onClick={() => navigate("/login", { replace: true })}
+          onClick={() => navigate("/", { replace: true })}
         >
           Go to login now
         </Button>

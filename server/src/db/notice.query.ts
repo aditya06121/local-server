@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { and, asc, desc, eq, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, lt, or, SQL } from "drizzle-orm";
 import { db } from "../db.js";
 import { notices } from "./schema/schema.notices.js";
 import { users } from "./schema/schema.users.js";
@@ -50,11 +50,28 @@ export async function createNotice(userId: string, content: string) {
   return notice;
 }
 
-export async function getNoticesPaginated(cursor?: string, limit = DEFAULT_PAGE_SIZE) {
+export async function getNoticesPaginated(cursor?: string, limit = DEFAULT_PAGE_SIZE, authorId?: string) {
   // Fetch one extra to determine whether a next page exists.
   const fetchLimit = limit + 1;
 
   const parsed = cursor ? decodeCursor(cursor) : null;
+
+  const cursorFilter: SQL | undefined = parsed
+    ? or(
+        lt(notices.createdAt, parsed.createdAt),
+        and(
+          eq(notices.createdAt, parsed.createdAt),
+          lt(notices.id, parsed.id),
+        ),
+      )
+    : undefined;
+
+  const authorFilter: SQL | undefined = authorId ? eq(notices.userId, authorId) : undefined;
+
+  const whereClause =
+    cursorFilter && authorFilter
+      ? and(authorFilter, cursorFilter)
+      : cursorFilter ?? authorFilter;
 
   const rows = await db
     .select({
@@ -69,17 +86,7 @@ export async function getNoticesPaginated(cursor?: string, limit = DEFAULT_PAGE_
     })
     .from(notices)
     .innerJoin(users, eq(notices.userId, users.id))
-    .where(
-      parsed
-        ? or(
-            lt(notices.createdAt, parsed.createdAt),
-            and(
-              eq(notices.createdAt, parsed.createdAt),
-              lt(notices.id, parsed.id),
-            ),
-          )
-        : undefined,
-    )
+    .where(whereClause)
     .orderBy(desc(notices.createdAt), desc(notices.id))
     .limit(fetchLimit);
 

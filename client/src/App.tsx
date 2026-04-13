@@ -13,7 +13,7 @@ import { alpha } from "@mui/material/styles";
 import SettingsIcon from "@mui/icons-material/Settings";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Link as RouterLink, Outlet, useNavigate } from "react-router-dom";
 import ProfileDrawer from "./components/ProfileDrawer";
 import { useAuth } from "./context/AuthContext";
 import { useThemeMode } from "./context/ThemeContext";
@@ -57,7 +57,11 @@ export default function App() {
               minHeight: 0,
             }}
           >
-            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+            <Box
+              component={RouterLink}
+              to="/"
+              sx={{ flexGrow: 1, minWidth: 0, textDecoration: "none", color: "text.primary" }}
+            >
               <Typography
                 variant="h6"
                 sx={{

@@ -626,7 +626,7 @@ describe("/friends", { timeout: 30000 }, () => {
     expect(cancelRes.statusCode).toBe(401);
   });
 
-  it("filters search results to exclude self and pending requests (friends are included)", async () => {
+  it("filters search results to exclude only self (friends and pending requests are included)", async () => {
     const currentUser = await registerUser("searchable-self");
     const friend = await registerUser("searchable-friend");
     const outgoingPending = await registerUser("searchable-outgoing");
@@ -700,10 +700,10 @@ describe("/friends", { timeout: 30000 }, () => {
     const userIds = body.data.users.map((u) => u.id);
     expect(userIds).toContain(candidate.user.id);
     expect(userIds).toContain(friend.user.id);
+    expect(userIds).toContain(outgoingPending.user.id);
+    expect(userIds).toContain(incomingPending.user.id);
     expect(userIds).not.toContain(currentUser.user.id);
-    expect(userIds).not.toContain(outgoingPending.user.id);
-    expect(userIds).not.toContain(incomingPending.user.id);
-    expect(body.data.users).toHaveLength(2);
+    expect(body.data.users).toHaveLength(4);
     expect(body.data.users[0]?.phone).toBeUndefined();
   });
 });

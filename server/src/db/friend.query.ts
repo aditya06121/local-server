@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { and, asc, eq, exists, ilike, not, or } from "drizzle-orm";
+import { and, asc, eq, ilike, not, or } from "drizzle-orm";
 import { db } from "../db.js";
 import { friends, friendRequests } from "./schema/schema.friends.js";
 import { users } from "./schema/schema.users.js";
@@ -39,30 +39,6 @@ export async function searchUsersByEmailFiltered(
 
         // exclude self
         not(eq(users.id, currentUserId)),
-
-        // exclude pending requests (either direction)
-        not(
-          exists(
-            db
-              .select()
-              .from(friendRequests)
-              .where(
-                and(
-                  eq(friendRequests.status, "pending"),
-                  or(
-                    and(
-                      eq(friendRequests.fromUserId, currentUserId),
-                      eq(friendRequests.toUserId, users.id),
-                    ),
-                    and(
-                      eq(friendRequests.fromUserId, users.id),
-                      eq(friendRequests.toUserId, currentUserId),
-                    ),
-                  ),
-                ),
-              ),
-          ),
-        ),
       ),
     )
     .orderBy(asc(users.email))

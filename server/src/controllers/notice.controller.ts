@@ -21,9 +21,9 @@ export async function postNoticeHandler(req: FastifyRequest, res: FastifyReply) 
 
 export async function getNoticesHandler(req: FastifyRequest, res: FastifyReply) {
   try {
-    const { cursor, limit } = req.query as { cursor?: string; limit?: number };
+    const { cursor, limit, authorId } = req.query as { cursor?: string; limit?: number; authorId?: string };
 
-    const result = await listNotices(cursor, limit);
+    const result = await listNotices(cursor, limit, authorId);
 
     return res.send(success("NOTICES_FETCHED", result));
   } catch (err) {

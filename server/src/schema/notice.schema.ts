@@ -55,6 +55,7 @@ export const getNoticesSchema = {
     properties: {
       cursor: { type: "string" },
       limit: { type: "integer", minimum: 1, maximum: 50 },
+      authorId: { type: "string" },
     },
   },
   response: {

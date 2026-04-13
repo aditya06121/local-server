@@ -30,7 +30,12 @@ const router = createBrowserRouter([
     path: "/notices",
     element: <Notices />,
   },
-  // Authenticated pages — share the App navbar layout, paths are absolute
+  // Public profile — no auth required
+  {
+    path: "/profiles/:userId",
+    element: <PublicProfile />,
+  },
+  // Authenticated pages — share the App navbar layout
   {
     element: <ProtectedRoute />,
     children: [
@@ -38,7 +43,6 @@ const router = createBrowserRouter([
         element: <App />,
         children: [
           { path: "/profile", element: <Profile /> },
-          { path: "/profiles/:userId", element: <PublicProfile /> },
         ],
       },
     ],

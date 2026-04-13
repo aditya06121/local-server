@@ -21,8 +21,8 @@ export async function postNotice(userId: string, content: string) {
   return createNotice(userId, trimmed);
 }
 
-export async function listNotices(cursor?: string, limit?: number) {
-  return getNoticesPaginated(cursor, limit);
+export async function listNotices(cursor?: string, limit?: number, authorId?: string) {
+  return getNoticesPaginated(cursor, limit, authorId);
 }
 
 export async function removeNotice(noticeId: string, requestingUserId: string) {
