@@ -16,6 +16,7 @@ import Login from "./pages/Login.tsx";
 import Notices from "./pages/Notices.tsx";
 import Logout from "./pages/Logout.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Friends from "./pages/Friends.tsx";
 import Profile from "./pages/Profile.tsx";
 import PublicProfile from "./pages/PublicProfile.tsx";
 import Register from "./pages/Register.tsx";
@@ -43,6 +44,7 @@ const router = createBrowserRouter([
         element: <App />,
         children: [
           { path: "/profile", element: <Profile /> },
+          { path: "/friends", element: <Friends /> },
         ],
       },
     ],

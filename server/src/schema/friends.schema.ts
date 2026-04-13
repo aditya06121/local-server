@@ -187,6 +187,31 @@ export const removeFriendSchema = {
   },
 };
 
+export const getRelationshipSchema = {
+  params: {
+    type: "object",
+    required: ["targetUserId"],
+    properties: {
+      targetUserId: { type: "string" },
+    },
+  },
+  response: {
+    200: createApiSuccessSchema({
+      type: "object",
+      required: ["relationship"],
+      properties: {
+        relationship: {
+          type: "string",
+          enum: ["self", "friends", "request_sent", "request_received", "none"],
+        },
+      },
+    }),
+    401: failureSchema,
+    429: failureSchema,
+    500: failureSchema,
+  },
+};
+
 export const searchUsersSchema = {
   querystring: {
     type: "object",

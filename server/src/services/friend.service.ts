@@ -170,6 +170,23 @@ export async function getMyPendingRequests(userId: string) {
   return getPendingRequestsForUser(userId);
 }
 
+export async function getRelationshipStatus(
+  viewerId: string,
+  targetUserId: string,
+): Promise<"self" | "friends" | "request_sent" | "request_received" | "none"> {
+  if (viewerId === targetUserId) return "self";
+
+  const friendship = await findFriendship(viewerId, targetUserId);
+  if (friendship) return "friends";
+
+  const request = await findFriendRequestBetweenUsers(viewerId, targetUserId);
+  if (request?.status === "pending") {
+    return request.fromUserId === viewerId ? "request_sent" : "request_received";
+  }
+
+  return "none";
+}
+
 export async function searchUsers(query: string, userId: string) {
   const normalizedQuery = query.toLowerCase().trim();
 

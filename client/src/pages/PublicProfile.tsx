@@ -16,7 +16,8 @@ import {
 import { alpha } from "@mui/material/styles";
 import Brightness4Icon from "@mui/icons-material/Brightness4";
 import Brightness7Icon from "@mui/icons-material/Brightness7";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { useThemeMode } from "../context/ThemeContext";
 import { api } from "../lib/api";
 
@@ -24,6 +25,8 @@ type ProfileUser = { id: string; name: string; email: string; bio: string | null
 type Notice = { id: string; content: string; createdAt: string; author: { id: string; name: string; email: string } };
 type ProfileError = { error?: { details?: string; code?: string } };
 type NoticesResponse = { data: { notices: Notice[]; nextCursor: string | null } };
+type RelationshipResponse = { data: { relationship: "self" | "friends" | "request_sent" | "request_received" | "none" } };
+type RequestsResponse = { data: { requests: { id: string; direction: string; otherUser: { id: string } }[] } };
 
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -38,6 +41,10 @@ function formatRelativeTime(iso: string): string {
 export default function PublicProfile() {
   const { userId } = useParams();
   const { mode, toggleMode } = useThemeMode();
+  const { user: authUser } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [user, setUser] = useState<ProfileUser | null>(null);
   const [profileError, setProfileError] = useState("");
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -47,6 +54,11 @@ export default function PublicProfile() {
   const [isLoadingNotices, setIsLoadingNotices] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [noticesError, setNoticesError] = useState("");
+
+  const [relationship, setRelationship] = useState<"self" | "friends" | "request_sent" | "request_received" | "none" | null>(null);
+  const [pendingRequestId, setPendingRequestId] = useState<string | null>(null);
+  const [friendActionBusy, setFriendActionBusy] = useState(false);
+  const [friendActionError, setFriendActionError] = useState("");
 
   useEffect(() => {
     if (!userId) {
@@ -80,6 +92,81 @@ export default function PublicProfile() {
 
     return () => { isActive = false; };
   }, [userId]);
+
+  useEffect(() => {
+    if (!authUser || !userId || authUser.id === userId) return;
+    let isActive = true;
+
+    async function loadRelationship() {
+      try {
+        const res = await api.get<RelationshipResponse>(`/friends/relationship/${userId}`);
+        const rel = res.data.data.relationship;
+        if (!isActive) return;
+        setRelationship(rel);
+
+        if (rel === "request_sent" || rel === "request_received") {
+          const reqRes = await api.get<RequestsResponse>("/friends/requests");
+          if (!isActive) return;
+          const req = reqRes.data.data.requests.find((r) => r.otherUser.id === userId);
+          setPendingRequestId(req?.id ?? null);
+        }
+      } catch { /* best-effort */ }
+    }
+
+    loadRelationship();
+    return () => { isActive = false; };
+  }, [userId, authUser?.id]);
+
+  async function handleSendRequest() {
+    if (!user) return;
+    setFriendActionBusy(true);
+    setFriendActionError("");
+    try {
+      await api.post("/friends/request", { email: user.email });
+      setRelationship("request_sent");
+      // fetch requestId for cancel
+      const reqRes = await api.get<RequestsResponse>("/friends/requests");
+      const req = reqRes.data.data.requests.find((r) => r.otherUser.id === userId);
+      setPendingRequestId(req?.id ?? null);
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ error?: { details?: string; code?: string } }>;
+      setFriendActionError(axiosErr.response?.data?.error?.details || axiosErr.response?.data?.error?.code || "Could not send request.");
+    } finally {
+      setFriendActionBusy(false);
+    }
+  }
+
+  async function handleCancelRequest() {
+    if (!pendingRequestId) return;
+    setFriendActionBusy(true);
+    setFriendActionError("");
+    try {
+      await api.delete(`/friends/request/${pendingRequestId}`);
+      setRelationship("none");
+      setPendingRequestId(null);
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ error?: { details?: string; code?: string } }>;
+      setFriendActionError(axiosErr.response?.data?.error?.details || axiosErr.response?.data?.error?.code || "Could not cancel request.");
+    } finally {
+      setFriendActionBusy(false);
+    }
+  }
+
+  async function handleAcceptRequest() {
+    if (!pendingRequestId) return;
+    setFriendActionBusy(true);
+    setFriendActionError("");
+    try {
+      await api.post("/friends/accept", { requestId: pendingRequestId });
+      setRelationship("friends");
+      setPendingRequestId(null);
+    } catch (err) {
+      const axiosErr = err as AxiosError<{ error?: { details?: string; code?: string } }>;
+      setFriendActionError(axiosErr.response?.data?.error?.details || axiosErr.response?.data?.error?.code || "Could not accept request.");
+    } finally {
+      setFriendActionBusy(false);
+    }
+  }
 
   async function handleLoadMore() {
     if (!nextCursor || !userId) return;
@@ -152,6 +239,49 @@ export default function PublicProfile() {
                     {user.bio?.trim() ? user.bio : "This user has not added a bio yet."}
                   </Typography>
                 </Box>
+
+                {/* Friend action */}
+                {friendActionError && <Alert severity="error" onClose={() => setFriendActionError("")}>{friendActionError}</Alert>}
+
+                {!authUser && (
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    sx={{ alignSelf: "flex-start" }}
+                    onClick={() => navigate("/login", { state: { from: location } })}
+                  >
+                    Sign in to add friend
+                  </Button>
+                )}
+
+                {authUser && relationship === "none" && (
+                  <Button variant="contained" size="small" disabled={friendActionBusy} sx={{ alignSelf: "flex-start" }} onClick={handleSendRequest}>
+                    {friendActionBusy ? "Sending..." : "Add friend"}
+                  </Button>
+                )}
+
+                {authUser && relationship === "friends" && (
+                  <Typography variant="caption" sx={{ px: 0.75, py: 0.25, borderRadius: 1, bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08), color: "primary.main", fontWeight: 700, alignSelf: "flex-start" }}>
+                    Already friends
+                  </Typography>
+                )}
+
+                {authUser && relationship === "request_sent" && (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="caption" sx={{ px: 0.75, py: 0.25, borderRadius: 1, bgcolor: (theme) => alpha(theme.palette.secondary.main, 0.08), color: "secondary.main", fontWeight: 700 }}>
+                      Request sent
+                    </Typography>
+                    <Button variant="outlined" color="secondary" size="small" disabled={friendActionBusy} onClick={handleCancelRequest}>
+                      {friendActionBusy ? "Cancelling..." : "Cancel"}
+                    </Button>
+                  </Stack>
+                )}
+
+                {authUser && relationship === "request_received" && (
+                  <Button variant="contained" size="small" disabled={friendActionBusy} sx={{ alignSelf: "flex-start" }} onClick={handleAcceptRequest}>
+                    {friendActionBusy ? "Accepting..." : "Accept request"}
+                  </Button>
+                )}
               </Stack>
             ) : null}
           </Paper>

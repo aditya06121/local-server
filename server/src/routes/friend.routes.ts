@@ -10,6 +10,7 @@ import {
   removeFriendHandler,
   getFriendsHandler,
   getPendingRequestsHandler,
+  getRelationshipHandler,
   searchUsersHandler,
 } from "../controllers/friends.controller.js";
 
@@ -21,6 +22,7 @@ import {
   getFriendsSchema,
   getRequestsSchema,
   removeFriendSchema,
+  getRelationshipSchema,
   searchUsersSchema,
 } from "../schema/friends.schema.js";
 
@@ -88,6 +90,16 @@ export default async function friendsRoutes(app: FastifyInstance) {
       config: { rateLimit: friendsRateLimit },
     },
     getPendingRequestsHandler,
+  );
+
+  app.get(
+    "/relationship/:targetUserId",
+    {
+      preHandler: authMiddleware,
+      schema: getRelationshipSchema,
+      config: { rateLimit: friendsRateLimit },
+    },
+    getRelationshipHandler,
   );
 
   app.get(

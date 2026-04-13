@@ -9,6 +9,7 @@ import {
   removeFriend,
   getMyFriends,
   getMyPendingRequests,
+  getRelationshipStatus,
   searchUsers,
 } from "../services/friend.service.js";
 
@@ -168,6 +169,23 @@ export async function getPendingRequestsHandler(
     const requests = await getMyPendingRequests(userId);
 
     return res.send(success("REQUESTS_FETCHED", { requests }));
+  } catch (err) {
+    return handleError(res, err);
+  }
+}
+
+export async function getRelationshipHandler(
+  req: FastifyRequest,
+  res: FastifyReply,
+) {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).send(failure("UNAUTHORIZED", "Missing user"));
+    }
+    const { targetUserId } = req.params as { targetUserId: string };
+    const relationship = await getRelationshipStatus(userId, targetUserId);
+    return res.send(success("RELATIONSHIP_FETCHED", { relationship }));
   } catch (err) {
     return handleError(res, err);
   }
